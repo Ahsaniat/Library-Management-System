@@ -2,6 +2,7 @@
 node_modules/
 playwright-report/
 logs/
+test-results/
 .pnp
 .pnp.js
 
