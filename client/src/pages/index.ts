@@ -1,0 +1,9 @@
+export { default as Home } from './Home';
+export { default as Login } from './Login';
+export { default as Register } from './Register';
+export { default as Books } from './Books';
+export { default as BookDetail } from './BookDetail';
+export { default as Dashboard } from './Dashboard';
+export { default as MyLoans } from './MyLoans';
+export { default as MyReservations } from './MyReservations';
+export { default as NotFound } from './NotFound';
