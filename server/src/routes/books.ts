@@ -34,6 +34,11 @@ router.get(
 );
 
 router.get(
+  '/openlibrary/search',
+  bookController.searchOpenLibrary.bind(bookController)
+);
+
+router.get(
   '/:id',
   optionalAuth,
   validate(bookIdValidator),

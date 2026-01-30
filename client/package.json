@@ -13,10 +13,16 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage"
   },
-  "keywords": ["library", "management", "react", "typescript"],
+  "keywords": [
+    "library",
+    "management",
+    "react",
+    "typescript"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.20",
     "axios": "^1.13.4",
     "clsx": "^2.1.1",

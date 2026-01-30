@@ -133,12 +133,54 @@ export class BookController {
         return;
       }
 
+      const { openLibraryService } = await import('../services');
+      const openLibraryData = await openLibraryService.lookupByIsbn(isbn);
+      
+      if (openLibraryData) {
+        const response: ApiResponse = {
+          success: true,
+          data: { book: openLibraryData, source: 'openlibrary' },
+          requestId: req.requestId,
+        };
+        res.json(response);
+        return;
+      }
+
       const response: ApiResponse = {
         success: false,
-        message: 'Book not found. Use Open Library API for external lookup.',
+        message: 'Book not found in database or Open Library.',
         requestId: req.requestId,
       };
       res.status(404).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async searchOpenLibrary(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const query = req.query.q as string;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      if (!query) {
+        const response: ApiResponse = {
+          success: false,
+          message: 'Search query is required',
+          requestId: req.requestId,
+        };
+        res.status(400).json(response);
+        return;
+      }
+
+      const { openLibraryService } = await import('../services');
+      const results = await openLibraryService.search(query, limit);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: { books: results },
+        requestId: req.requestId,
+      };
+      res.json(response);
     } catch (error) {
       next(error);
     }

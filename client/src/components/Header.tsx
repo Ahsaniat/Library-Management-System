@@ -3,6 +3,7 @@ import { Book, Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '../store';
 import { useLogout } from '../hooks';
+import NotificationDropdown from './NotificationDropdown';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -42,6 +43,7 @@ export default function Header() {
                   Reservations
                 </Link>
                 <div className="flex items-center gap-4 ml-4 border-l border-blue-400 pl-4">
+                  <NotificationDropdown />
                   <span className="text-sm">{user?.firstName}</span>
                   <button
                     onClick={handleLogout}

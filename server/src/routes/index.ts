@@ -3,6 +3,8 @@ import authRoutes from './auth';
 import bookRoutes from './books';
 import loanRoutes from './loans';
 import reservationRoutes from './reservations';
+import notificationRoutes from './notifications';
+import reportRoutes from './reports';
 import { ApiResponse } from '../types';
 
 const router = Router();
@@ -23,5 +25,7 @@ router.use('/auth', authRoutes);
 router.use('/books', bookRoutes);
 router.use('/loans', loanRoutes);
 router.use('/reservations', reservationRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;
