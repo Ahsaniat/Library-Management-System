@@ -4,10 +4,10 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENTS                                   │
+│                        CLIENTS                                  │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
 │  │   Browser   │  │  Mobile App │  │  API Client │              │
-│  │   (React)   │  │   (Future)  │  │  (Third-party)             │
+│  │   (React)   │  │   (Future)  │  │(Third-party)|              │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘              │
 └─────────┼────────────────┼────────────────┼─────────────────────┘
           │                │                │
@@ -38,22 +38,23 @@
 ## Component Architecture
 
 ### Frontend (React)
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    React Application                         │
+│                    React Application                        │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
 │  │   Pages     │  │ Components  │  │   Hooks     │          │
 │  │  (Routes)   │  │    (UI)     │  │  (Logic)    │          │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘          │
-│         │                │                │                  │
-│         └────────────────┼────────────────┘                  │
-│                          │                                   │
+│         │                │                │                 │
+│         └────────────────┼────────────────┘                 │
+│                          │                                  │
 │  ┌─────────────┐  ┌──────▼──────┐  ┌─────────────┐          │
 │  │   Zustand   │  │  TanStack   │  │   Services  │          │
 │  │   (State)   │  │   Query     │  │    (API)    │          │
 │  └─────────────┘  └─────────────┘  └──────┬──────┘          │
-│                                           │                  │
+│                                           │                 │
 └───────────────────────────────────────────┼─────────────────┘
                                             │
                                      ┌──────▼──────┐
@@ -63,48 +64,50 @@
 ```
 
 ### Backend (Express)
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Express Application                       │
+│                    Express Application                      │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
+│                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │                    Middleware                        │    │
-│  │  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ │    │
-│  │  │Helmet │ │ CORS  │ │ Rate  │ │Logger │ │ Auth  │ │    │
-│  │  │       │ │       │ │Limiter│ │       │ │       │ │    │
-│  │  └───────┘ └───────┘ └───────┘ └───────┘ └───────┘ │    │
+│  │                    Middleware                       │    │
+│  │  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐  │    │
+│  │  │Helmet │ │ CORS  │ │ Rate  │ │Logger │ │ Auth  │  │    │
+│  │  │       │ │       │ │Limiter│ │       │ │       │  │    │
+│  │  └───────┘ └───────┘ └───────┘ └───────┘ └───────┘  │    │
 │  └─────────────────────────────────────────────────────┘    │
-│                          │                                   │
+│                          │                                  │
 │  ┌───────────────────────▼──────────────────────────────┐   │
-│  │                    Routes                             │   │
-│  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐       │   │
-│  │  │ Auth │ │Books │ │Loans │ │Reserv│ │Users │       │   │
-│  │  └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘       │   │
+│  │                    Routes                            │   │
+│  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐        │   │
+│  │  │ Auth │ │Books │ │Loans │ │Reserv│ │Users │        │   │
+│  │  └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘        │   │
 │  └─────┼────────┼────────┼────────┼────────┼────────────┘   │
 │        └────────┴────────┼────────┴────────┘                │
-│                          │                                   │
+│                          │                                  │
 │  ┌───────────────────────▼──────────────────────────────┐   │
-│  │                  Controllers                          │   │
-│  │  Validate → Process → Respond                         │   │
+│  │                  Controllers                         │   │
+│  │  Validate → Process → Respond                        │   │
 │  └───────────────────────┬──────────────────────────────┘   │
-│                          │                                   │
+│                          │                                  │
 │  ┌───────────────────────▼──────────────────────────────┐   │
-│  │                    Services                           │   │
-│  │  Business Logic, Transactions, External APIs          │   │
+│  │                    Services                          │   │
+│  │  Business Logic, Transactions, External APIs         │   │
 │  └───────────────────────┬──────────────────────────────┘   │
-│                          │                                   │
+│                          │                                  │
 │  ┌───────────────────────▼──────────────────────────────┐   │
-│  │                    Models                             │   │
-│  │  Sequelize ORM, Associations, Validations             │   │
-│  └───────────────────────────────────────────────────────┘   │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+│  │                    Models                            │   │
+│  │  Sequelize ORM, Associations, Validations            │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Data Flow
 
 ### Authentication Flow
+
 ```
 User → Login Form → POST /api/v1/auth/login
                          │
@@ -133,6 +136,7 @@ User → Login Form → POST /api/v1/auth/login
 ```
 
 ### Book Checkout Flow
+
 ```
 Librarian → Scan Barcode → POST /api/v1/loans/checkout
                                     │
@@ -172,38 +176,40 @@ Librarian → Scan Barcode → POST /api/v1/loans/checkout
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Security Stack                           │
+│                     Security Stack                          │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 1: Network                                            │
-│  ├─ HTTPS/TLS encryption                                     │
+│  Layer 1: Network                                           │
+│  ├─ HTTPS/TLS encryption                                    │
 │  ├─ Rate limiting (100 req/15min general, 10 req/15min auth)│
-│  └─ CORS restrictions                                        │
+│  └─ CORS restrictions                                       │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 2: Application                                        │
+│  Layer 2: Application                                       │
 │  ├─ Helmet security headers (CSP, HSTS, X-Frame-Options)    │
 │  ├─ Input validation (express-validator, Zod)               │
-│  └─ Request size limits (10MB)                               │
+│  └─ Request size limits (10MB)                              │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 3: Authentication                                     │
+│  Layer 3: Authentication                                    │
 │  ├─ JWT with short expiry (15min access, 7d refresh)        │
-│  ├─ bcrypt password hashing (12 rounds)                      │
-│  └─ Role-based access control (RBAC)                         │
+│  ├─ bcrypt password hashing (12 rounds)                     │
+│  └─ Role-based access control (RBAC)                        │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 4: Data                                               │
-│  ├─ Parameterized queries (Sequelize ORM)                    │
-│  ├─ No secret storage in code                                │
-│  └─ Audit logging                                            │
+│  Layer 4: Data                                              │
+│  ├─ Parameterized queries (Sequelize ORM)                   │
+│  ├─ No secret storage in code                               │
+│  └─ Audit logging                                           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ## Deployment Architecture
 
 ### Development
+
 ```
 localhost:5173 (Vite) ──► localhost:3001 (Express) ──► localhost:5432 (PostgreSQL)
 ```
 
 ### Production (Docker)
+
 ```
                     ┌─────────────────────┐
                     │   Docker Network    │

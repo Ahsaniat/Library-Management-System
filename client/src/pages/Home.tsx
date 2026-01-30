@@ -9,13 +9,14 @@ export default function Home() {
 
   return (
     <div>
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
+    
+      <section className="text-black py-20" style={{ backgroundColor: 'var(--parchment-dark)', border: '1px solid var(--parchment-border)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6" >
               Welcome to the Library Management System
             </h1>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-black-100 mb-8 max-w-2xl mx-auto">
               Discover thousands of books, manage your loans, and reserve your favorite titles.
               Your gateway to knowledge starts here.
             </p>

@@ -4,3 +4,5 @@ export { bookService } from './bookService';
 export { loanService } from './loanService';
 export { reservationService } from './reservationService';
 export { notificationService } from './notificationService';
+export { bookRequestService } from './bookRequestService';
+export { wishlistService } from './wishlistService';

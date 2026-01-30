@@ -3,6 +3,24 @@ import { loanService } from '../services';
 import { ApiResponse, LoanStatus } from '../types';
 
 export class LoanController {
+  async selfCheckout(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const loan = await loanService.selfCheckout({
+        bookId: req.body.bookId,
+        userId: req.user!.id,
+      });
+      const response: ApiResponse = {
+        success: true,
+        message: 'Book borrowed successfully',
+        data: { loan },
+        requestId: req.requestId,
+      };
+      res.status(201).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async checkout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const loan = await loanService.checkout({

@@ -12,6 +12,12 @@ import { UserRole } from '../types';
 const router = Router();
 
 router.post(
+  '/self-checkout',
+  authenticate,
+  loanController.selfCheckout.bind(loanController)
+);
+
+router.post(
   '/checkout',
   authenticate,
   authorize(UserRole.ADMIN, UserRole.LIBRARIAN),

@@ -56,6 +56,12 @@ router.get(
   authController.getProfile.bind(authController)
 );
 
+router.patch(
+  '/profile',
+  authenticate,
+  authController.updateProfile.bind(authController)
+);
+
 router.post(
   '/change-password',
   authenticate,

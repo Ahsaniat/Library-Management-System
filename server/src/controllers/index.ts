@@ -4,3 +4,6 @@ export { loanController, LoanController } from './loanController';
 export { reservationController, ReservationController } from './reservationController';
 export { notificationController, NotificationController } from './notificationController';
 export { reportController, ReportController } from './reportController';
+export { adminController, AdminController } from './adminController';
+export { bookRequestController, BookRequestController } from './bookRequestController';
+export { wishlistController, WishlistController } from './wishlistController';

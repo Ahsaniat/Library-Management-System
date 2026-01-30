@@ -11,6 +11,12 @@ interface CheckoutData {
   userId: string;
   librarianId?: string;
   dueDate?: Date;
+  isSelfCheckout?: boolean;
+}
+
+interface SelfCheckoutData {
+  bookId: string;
+  userId: string;
 }
 
 interface CheckinResult {
@@ -19,6 +25,103 @@ interface CheckinResult {
 }
 
 export class LoanService {
+  async selfCheckout(data: SelfCheckoutData): Promise<Loan> {
+    return sequelize.transaction(async (t: Transaction) => {
+      const availableCopy = await BookCopy.findOne({
+        where: {
+          bookId: data.bookId,
+          status: BookStatus.AVAILABLE,
+        },
+        include: [{ model: Book, as: 'book' }],
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!availableCopy) {
+        throw new ConflictError('No available copies for self-checkout');
+      }
+
+      const user = await User.findByPk(data.userId, { transaction: t });
+      if (!user || !user.isActive) {
+        throw new NotFoundError('User');
+      }
+
+      const activeFines = await Fine.count({
+        where: { userId: data.userId, status: 'pending' },
+        transaction: t,
+      });
+
+      if (activeFines > 0) {
+        throw new ValidationError('You have unpaid fines. Please clear them before borrowing.');
+      }
+
+      const activeLoans = await Loan.count({
+        where: { userId: data.userId, status: LoanStatus.ACTIVE },
+        transaction: t,
+      });
+
+      const maxLoans = 5;
+      if (activeLoans >= maxLoans) {
+        throw new ValidationError(`You have reached the maximum of ${maxLoans} active loans`);
+      }
+
+      const existingLoan = await Loan.findOne({
+        where: {
+          userId: data.userId,
+          status: LoanStatus.ACTIVE,
+        },
+        include: [
+          {
+            model: BookCopy,
+            as: 'bookCopy',
+            where: { bookId: data.bookId },
+          },
+        ],
+        transaction: t,
+      });
+
+      if (existingLoan) {
+        throw new ConflictError('You already have an active loan for this book');
+      }
+
+      const dueDate = calculateDueDate(14);
+
+      await availableCopy.update({ status: BookStatus.BORROWED }, { transaction: t });
+
+      const loan = await Loan.create(
+        {
+          bookCopyId: availableCopy.id,
+          userId: data.userId,
+          dueDate,
+          status: LoanStatus.ACTIVE,
+        },
+        { transaction: t }
+      );
+
+      await Reservation.update(
+        { status: ReservationStatus.FULFILLED, fulfilledAt: new Date() },
+        {
+          where: {
+            bookId: data.bookId,
+            userId: data.userId,
+            status: { [Op.in]: [ReservationStatus.PENDING, ReservationStatus.READY] },
+          },
+          transaction: t,
+        }
+      );
+
+      logger.info({
+        action: 'self_checkout',
+        loanId: loan.id,
+        bookCopyId: availableCopy.id,
+        bookId: data.bookId,
+        userId: data.userId,
+      });
+
+      return loan;
+    });
+  }
+
   async checkout(data: CheckoutData): Promise<Loan> {
     return sequelize.transaction(async (t: Transaction) => {
       const bookCopy = await BookCopy.findByPk(data.bookCopyId, {

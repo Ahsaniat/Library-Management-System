@@ -122,6 +122,42 @@ export class AuthController {
       next(error);
     }
   }
+
+  async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { User } = await import('../models');
+      const user = await User.findByPk(req.user!.id);
+      
+      if (!user) {
+        const response: ApiResponse = {
+          success: false,
+          message: 'User not found',
+          requestId: req.requestId,
+        };
+        res.status(404).json(response);
+        return;
+      }
+
+      const { firstName, lastName, phone, address } = req.body;
+      
+      await user.update({
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(phone !== undefined && { phone }),
+        ...(address !== undefined && { address }),
+      });
+
+      const response: ApiResponse = {
+        success: true,
+        message: 'Profile updated successfully',
+        data: { user },
+        requestId: req.requestId,
+      };
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const authController = new AuthController();

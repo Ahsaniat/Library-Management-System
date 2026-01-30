@@ -1,9 +1,11 @@
-import { Op, WhereOptions, Includeable } from 'sequelize';
+import { Op, WhereOptions, Includeable, Transaction } from 'sequelize';
 import { Book, Author, Category, Publisher, BookCopy, Review } from '../models';
+import sequelize from '../config/database';
 import { NotFoundError, ConflictError } from '../utils/errors';
 import { PaginationParams, PaginatedResponse, BookStatus } from '../types';
 import { calculatePagination } from '../utils/helpers';
 import logger from '../utils/logger';
+import { v4 as uuidv4 } from 'uuid';
 
 interface BookSearchParams extends PaginationParams {
   q?: string;
@@ -28,6 +30,10 @@ interface CreateBookData {
   authorId?: string;
   publisherId?: string;
   categoryId?: string;
+  authorName?: string;
+  publisherName?: string;
+  categories?: string[];
+  numberOfCopies?: number;
 }
 
 export class BookService {
@@ -40,6 +46,7 @@ export class BookService {
       { model: Author, as: 'author', attributes: ['id', 'name'] },
       { model: Category, as: 'category', attributes: ['id', 'name'] },
       { model: Publisher, as: 'publisher', attributes: ['id', 'name'] },
+      { model: BookCopy, as: 'copies', attributes: ['id', 'barcode', 'status', 'condition'] },
     ];
 
     if (params.q) {
@@ -129,32 +136,146 @@ export class BookService {
   }
 
   async create(data: CreateBookData): Promise<Book> {
-    const existing = await Book.findOne({ where: { isbn: data.isbn } });
-    if (existing) {
-      throw new ConflictError('Book with this ISBN already exists');
-    }
-
-    const book = await Book.create(data);
-    logger.info({ action: 'book_created', bookId: book.id, isbn: book.isbn });
-    return book;
-  }
-
-  async update(id: string, data: Partial<CreateBookData>): Promise<Book> {
-    const book = await Book.findByPk(id);
-    if (!book) {
-      throw new NotFoundError('Book');
-    }
-
-    if (data.isbn && data.isbn !== book.isbn) {
-      const existing = await Book.findOne({ where: { isbn: data.isbn } });
+    return sequelize.transaction(async (t: Transaction) => {
+      const existing = await Book.findOne({ where: { isbn: data.isbn }, transaction: t });
       if (existing) {
         throw new ConflictError('Book with this ISBN already exists');
       }
-    }
 
-    await book.update(data);
-    logger.info({ action: 'book_updated', bookId: book.id });
-    return book;
+      let authorId: string | undefined = data.authorId;
+      if (!authorId && data.authorName) {
+        const [author] = await Author.findOrCreate({
+          where: { name: data.authorName },
+          defaults: { name: data.authorName },
+          transaction: t,
+        });
+        authorId = author.id;
+      }
+
+      let publisherId: string | undefined = data.publisherId;
+      if (!publisherId && data.publisherName) {
+        const [publisher] = await Publisher.findOrCreate({
+          where: { name: data.publisherName },
+          defaults: { name: data.publisherName },
+          transaction: t,
+        });
+        publisherId = publisher.id;
+      }
+
+      let categoryId: string | undefined = data.categoryId;
+      if (!categoryId && data.categories && data.categories.length > 0) {
+        const categoryName = data.categories[0] as string;
+        const [category] = await Category.findOrCreate({
+          where: { name: categoryName },
+          defaults: { name: categoryName },
+          transaction: t,
+        });
+        categoryId = category.id;
+      }
+
+      const bookData: {
+        isbn: string;
+        title: string;
+        subtitle?: string;
+        description?: string;
+        publishedYear?: number;
+        edition?: string;
+        language: string;
+        pageCount?: number;
+        coverImage?: string;
+        authorId?: string;
+        publisherId?: string;
+        categoryId?: string;
+      } = {
+        isbn: data.isbn,
+        title: data.title,
+        subtitle: data.subtitle,
+        description: data.description,
+        publishedYear: data.publishedYear,
+        edition: data.edition,
+        language: data.language || 'en',
+        pageCount: data.pageCount,
+        coverImage: data.coverImage,
+      };
+
+      if (authorId) bookData.authorId = authorId;
+      if (publisherId) bookData.publisherId = publisherId;
+      if (categoryId) bookData.categoryId = categoryId;
+
+      const book = await Book.create(bookData, { transaction: t });
+
+      const numberOfCopies = data.numberOfCopies ?? 1;
+      if (numberOfCopies > 0) {
+        const copies = [];
+        for (let i = 0; i < numberOfCopies; i++) {
+          copies.push({
+            bookId: book.id,
+            barcode: `${data.isbn}-${String(i + 1).padStart(3, '0')}`,
+            status: BookStatus.AVAILABLE,
+            condition: 'good' as const,
+          });
+        }
+        await BookCopy.bulkCreate(copies, { transaction: t });
+      }
+
+      logger.info({ action: 'book_created', bookId: book.id, isbn: book.isbn, copies: numberOfCopies });
+      return book;
+    });
+  }
+
+  async update(id: string, data: Partial<CreateBookData> & { numberOfCopies?: number }): Promise<Book> {
+    return sequelize.transaction(async (t: Transaction) => {
+      const book = await Book.findByPk(id, {
+        include: [{ model: BookCopy, as: 'copies' }],
+        transaction: t,
+      });
+      if (!book) {
+        throw new NotFoundError('Book');
+      }
+
+      if (data.isbn && data.isbn !== book.isbn) {
+        const existing = await Book.findOne({ where: { isbn: data.isbn }, transaction: t });
+        if (existing) {
+          throw new ConflictError('Book with this ISBN already exists');
+        }
+      }
+
+      const updateData: Partial<CreateBookData> = { ...data };
+      delete (updateData as { numberOfCopies?: number }).numberOfCopies;
+
+      await book.update(updateData, { transaction: t });
+
+      if (typeof data.numberOfCopies === 'number') {
+        const currentCopies = (book as Book & { copies?: BookCopy[] }).copies ?? [];
+        const currentCount = currentCopies.length;
+        const targetCount = data.numberOfCopies;
+
+        if (targetCount > currentCount) {
+          const newCopies = [];
+          for (let i = currentCount; i < targetCount; i++) {
+            newCopies.push({
+              bookId: book.id,
+              barcode: `${book.isbn}-${String(i + 1).padStart(3, '0')}-${uuidv4().slice(0, 4)}`,
+              status: BookStatus.AVAILABLE,
+              condition: 'good' as const,
+            });
+          }
+          await BookCopy.bulkCreate(newCopies, { transaction: t });
+        } else if (targetCount < currentCount) {
+          const availableCopies = currentCopies.filter(c => c.status === BookStatus.AVAILABLE);
+          const copiesToRemove = availableCopies.slice(0, currentCount - targetCount);
+          if (copiesToRemove.length > 0) {
+            await BookCopy.destroy({
+              where: { id: copiesToRemove.map(c => c.id) },
+              transaction: t,
+            });
+          }
+        }
+      }
+
+      logger.info({ action: 'book_updated', bookId: book.id });
+      return book;
+    });
   }
 
   async delete(id: string): Promise<void> {

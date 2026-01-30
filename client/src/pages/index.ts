@@ -7,3 +7,6 @@ export { default as Dashboard } from './Dashboard';
 export { default as MyLoans } from './MyLoans';
 export { default as MyReservations } from './MyReservations';
 export { default as NotFound } from './NotFound';
+export { default as Profile } from './Profile';
+export { default as MyWishlist } from './MyWishlist';
+export { default as MyBookRequests } from './MyBookRequests';

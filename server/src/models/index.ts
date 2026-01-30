@@ -14,6 +14,8 @@ import Review from './Review';
 import Notification from './Notification';
 import AuditLog from './AuditLog';
 import Setting from './Setting';
+import BookRequest from './BookRequest';
+import Wishlist from './Wishlist';
 
 Book.belongsTo(Author, { foreignKey: 'authorId', as: 'author' });
 Author.hasMany(Book, { foreignKey: 'authorId', as: 'books' });
@@ -77,6 +79,17 @@ User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
 
 AuditLog.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+BookRequest.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(BookRequest, { foreignKey: 'userId', as: 'bookRequests' });
+
+BookRequest.belongsTo(User, { foreignKey: 'processedBy', as: 'processor' });
+
+Wishlist.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(Wishlist, { foreignKey: 'userId', as: 'wishlistItems' });
+
+Wishlist.belongsTo(Book, { foreignKey: 'bookId', as: 'book' });
+Book.hasMany(Wishlist, { foreignKey: 'bookId', as: 'wishlistEntries' });
+
 export {
   sequelize,
   User,
@@ -94,4 +107,6 @@ export {
   Notification,
   AuditLog,
   Setting,
+  BookRequest,
+  Wishlist,
 };

@@ -14,6 +14,13 @@ export const loanService = {
     return response.data.data!.loan;
   },
 
+  async selfCheckout(bookId: string): Promise<Loan> {
+    const response = await api.post<ApiResponse<{ loan: Loan }>>('/loans/self-checkout', {
+      bookId,
+    });
+    return response.data.data!.loan;
+  },
+
   async checkout(bookCopyId: string, userId: string): Promise<Loan> {
     const response = await api.post<ApiResponse<{ loan: Loan }>>('/loans/checkout', {
       bookCopyId,

@@ -44,6 +44,10 @@ export const createBookValidator = [
     .optional()
     .isUUID()
     .withMessage('Invalid category ID'),
+  body('numberOfCopies')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Number of copies must be non-negative'),
 ];
 
 export const updateBookValidator = [
@@ -88,6 +92,10 @@ export const updateBookValidator = [
   body('categoryId')
     .optional()
     .isUUID(),
+  body('numberOfCopies')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Number of copies must be non-negative'),
 ];
 
 export const bookIdValidator = [

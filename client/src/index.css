@@ -1,1 +1,25 @@
 @import "tailwindcss";
+
+:root {
+  --parchment-bg: #f5f0e6;
+  --parchment-light: #faf7f0;
+  --parchment-dark: #e8e0d0;
+  --parchment-border: #d4c9b5;
+  --ink-primary: #3d3225;
+  --ink-secondary: #5c4f3d;
+  --accent-warm: #8b7355;
+  --accent-muted: #6b5d4d;
+}
+
+body {
+  background-color: var(--parchment-bg);
+}
+
+.parchment-bg {
+  background-color: var(--parchment-bg);
+}
+
+.parchment-card {
+  background-color: var(--parchment-light);
+  border: 1px solid var(--parchment-border);
+}

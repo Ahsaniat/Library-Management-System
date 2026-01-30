@@ -19,6 +19,19 @@ export function useRenewLoan() {
   });
 }
 
+export function useSelfCheckout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (bookId: string) => loanService.selfCheckout(bookId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+    },
+  });
+}
+
 export function useCheckout() {
   const queryClient = useQueryClient();
 
