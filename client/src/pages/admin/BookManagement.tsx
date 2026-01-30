@@ -30,6 +30,8 @@ interface OpenLibraryBook {
   description?: string;
   categories?: string[];
   language?: string;
+  averageRating?: number;
+  ratingsCount?: number;
 }
 
 interface EditBookData {
@@ -133,7 +135,9 @@ export default function BookManagement() {
       coverImage: lookupResult.coverImage,
       language: lookupResult.language,
       numberOfCopies,
-    } as Partial<Book> & { numberOfCopies: number });
+      averageRating: lookupResult.averageRating || 0,
+      totalRatings: lookupResult.ratingsCount || 0,
+    } as Partial<Book> & { numberOfCopies: number; averageRating?: number; totalRatings?: number });
   };
 
   const handleOpenEdit = (book: Book) => {

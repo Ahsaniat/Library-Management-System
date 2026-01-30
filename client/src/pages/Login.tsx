@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useLogin } from '../hooks';
 import { Button, Input } from '../components';
 import { AxiosError } from 'axios';
+import { UserRole } from '../types';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -12,15 +13,17 @@ export default function Login() {
   const location = useLocation();
   const login = useLogin();
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      await login.mutateAsync({ email, password });
-      navigate(from, { replace: true });
+      const result = await login.mutateAsync({ email, password });
+      const isAdminOrLibrarian = result.user.role === UserRole.ADMIN || result.user.role === UserRole.LIBRARIAN;
+      const defaultPath = isAdminOrLibrarian ? '/admin' : '/dashboard';
+      navigate(from || defaultPath, { replace: true });
     } catch (err) {
       const axiosError = err as AxiosError<{ error: string }>;
       setError(axiosError.response?.data?.error || 'Login failed. Please try again.');

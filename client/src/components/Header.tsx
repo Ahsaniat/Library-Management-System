@@ -37,7 +37,7 @@ export default function Header() {
             </Link>
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard" className="hover:opacity-80 transition-opacity">
+                <Link to={isAdminOrLibrarian ? '/admin' : '/dashboard'} className="hover:opacity-80 transition-opacity">
                   Dashboard
                 </Link>
                 {isMember && (
@@ -142,7 +142,7 @@ export default function Header() {
               </Link>
               {isAuthenticated ? (
                 <>
-                  <Link to="/dashboard">Dashboard</Link>
+                  <Link to={isAdminOrLibrarian ? '/admin' : '/dashboard'}>Dashboard</Link>
                   {isMember && (
                     <>
                       <Link to="/my-loans">My Loans</Link>

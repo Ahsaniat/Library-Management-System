@@ -27,18 +27,27 @@ interface CheckinResult {
 export class LoanService {
   async selfCheckout(data: SelfCheckoutData): Promise<Loan> {
     return sequelize.transaction(async (t: Transaction) => {
+      // First find available copy without lock to avoid outer join issue
       const availableCopy = await BookCopy.findOne({
         where: {
           bookId: data.bookId,
           status: BookStatus.AVAILABLE,
         },
-        include: [{ model: Book, as: 'book' }],
         transaction: t,
-        lock: t.LOCK.UPDATE,
       });
 
       if (!availableCopy) {
         throw new ConflictError('No available copies for self-checkout');
+      }
+
+      // Now lock just the BookCopy row
+      const lockedCopy = await BookCopy.findByPk(availableCopy.id, {
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!lockedCopy || lockedCopy.status !== BookStatus.AVAILABLE) {
+        throw new ConflictError('Book copy is no longer available');
       }
 
       const user = await User.findByPk(data.userId, { transaction: t });
@@ -86,11 +95,11 @@ export class LoanService {
 
       const dueDate = calculateDueDate(14);
 
-      await availableCopy.update({ status: BookStatus.BORROWED }, { transaction: t });
+      await lockedCopy.update({ status: BookStatus.BORROWED }, { transaction: t });
 
       const loan = await Loan.create(
         {
-          bookCopyId: availableCopy.id,
+          bookCopyId: lockedCopy.id,
           userId: data.userId,
           dueDate,
           status: LoanStatus.ACTIVE,
@@ -113,7 +122,7 @@ export class LoanService {
       logger.info({
         action: 'self_checkout',
         loanId: loan.id,
-        bookCopyId: availableCopy.id,
+        bookCopyId: lockedCopy.id,
         bookId: data.bookId,
         userId: data.userId,
       });

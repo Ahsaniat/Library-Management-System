@@ -26,6 +26,8 @@ interface OpenLibrarySearchResult {
     publisher?: string[];
     number_of_pages_median?: number;
     subject?: string[];
+    ratings_average?: number;
+    ratings_count?: number;
   }>;
 }
 
@@ -41,10 +43,34 @@ interface BookData {
   publisherName?: string;
   categories?: string[];
   language?: string;
+  averageRating?: number;
+  ratingsCount?: number;
+}
+
+interface OpenLibraryRatings {
+  summary?: {
+    average?: number;
+    count?: number;
+  };
 }
 
 export class OpenLibraryService {
   private baseUrl = config.openLibraryApiUrl;
+
+  private async fetchRatings(workKey: string): Promise<{ average?: number; count?: number }> {
+    try {
+      const response = await axios.get<OpenLibraryRatings>(
+        `${this.baseUrl}${workKey}/ratings.json`,
+        { timeout: 5000 }
+      );
+      return {
+        average: response.data.summary?.average,
+        count: response.data.summary?.count,
+      };
+    } catch {
+      return {};
+    }
+  }
 
   async lookupByIsbn(isbn: string): Promise<BookData | null> {
     const cleanIsbn = isbn.replace(/[-\s]/g, '');
@@ -93,6 +119,16 @@ export class OpenLibraryService {
         description = data.description.value;
       }
 
+      // Fetch ratings if work key is available
+      let averageRating: number | undefined;
+      let ratingsCount: number | undefined;
+      const workKey = (response.data as { works?: Array<{ key: string }> }).works?.[0]?.key;
+      if (workKey) {
+        const ratings = await this.fetchRatings(workKey);
+        averageRating = ratings.average;
+        ratingsCount = ratings.count;
+      }
+
       const bookData: BookData = {
         isbn: cleanIsbn,
         title: data.title,
@@ -104,6 +140,8 @@ export class OpenLibraryService {
         authorName,
         publisherName: data.publishers?.[0]?.name,
         categories: data.subjects?.slice(0, 5),
+        averageRating,
+        ratingsCount,
       };
 
       logger.info({ action: 'openlibrary_isbn_found', isbn: cleanIsbn, title: data.title });
@@ -121,7 +159,7 @@ export class OpenLibraryService {
   async search(query: string, limit = 10): Promise<BookData[]> {
     try {
       const response = await axios.get<OpenLibrarySearchResult>(`${this.baseUrl}/search.json`, {
-        params: { q: query, limit, fields: 'key,title,author_name,first_publish_year,isbn,cover_i,publisher,number_of_pages_median,subject' },
+        params: { q: query, limit, fields: 'key,title,author_name,first_publish_year,isbn,cover_i,publisher,number_of_pages_median,subject,ratings_average,ratings_count' },
         timeout: 10000,
         headers: { 'Accept': 'application/json' },
       });
@@ -137,6 +175,8 @@ export class OpenLibraryService {
         authorName: doc.author_name?.[0],
         publisherName: doc.publisher?.[0],
         categories: doc.subject?.slice(0, 5),
+        averageRating: doc.ratings_average,
+        ratingsCount: doc.ratings_count,
       }));
     } catch (error) {
       logger.error({ action: 'openlibrary_search_error', query, error });

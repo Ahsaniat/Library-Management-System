@@ -34,6 +34,8 @@ interface CreateBookData {
   publisherName?: string;
   categories?: string[];
   numberOfCopies?: number;
+  averageRating?: number;
+  totalRatings?: number;
 }
 
 export class BookService {
@@ -186,6 +188,8 @@ export class BookService {
         authorId?: string;
         publisherId?: string;
         categoryId?: string;
+        averageRating?: number;
+        totalRatings?: number;
       } = {
         isbn: data.isbn,
         title: data.title,
@@ -196,6 +200,8 @@ export class BookService {
         language: data.language || 'en',
         pageCount: data.pageCount,
         coverImage: data.coverImage,
+        averageRating: data.averageRating || 0,
+        totalRatings: data.totalRatings || 0,
       };
 
       if (authorId) bookData.authorId = authorId;

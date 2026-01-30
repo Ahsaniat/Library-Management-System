@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Check, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { Button, Input, LoadingSpinner } from '../../components';
 import { Loan } from '../../types';
 
 interface LoansResponse {
   success: boolean;
-  data: Loan[];
+  data: {
+    loans: Loan[];
+  };
 }
 
 interface CheckoutData {
@@ -20,7 +22,7 @@ function useOverdueLoans() {
     queryKey: ['admin', 'loans', 'overdue'],
     queryFn: async () => {
       const response = await api.get<LoansResponse>('/loans/overdue');
-      return response.data.data;
+      return response.data.data?.loans || [];
     },
   });
 }
@@ -30,9 +32,11 @@ export default function LoanManagement() {
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({ bookCopyId: '', userId: '' });
   const [checkinBarcode, setCheckinBarcode] = useState('');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: overdueLoans, isLoading } = useOverdueLoans();
+  const { data: overdueLoans, isLoading, error } = useOverdueLoans();
 
   const checkout = useMutation({
     mutationFn: async (data: CheckoutData) => {
@@ -43,10 +47,12 @@ export default function LoanManagement() {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       setShowCheckoutModal(false);
       setCheckoutData({ bookCopyId: '', userId: '' });
-      alert('Book checked out successfully!');
+      setSuccessMessage('Book checked out successfully!');
+      setTimeout(() => setSuccessMessage(null), 3000);
     },
     onError: (error: Error) => {
-      alert(`Checkout failed: ${error.message}`);
+      setErrorMessage(`Checkout failed: ${error.message}`);
+      setTimeout(() => setErrorMessage(null), 5000);
     },
   });
 
@@ -59,10 +65,12 @@ export default function LoanManagement() {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       setShowCheckinModal(false);
       setCheckinBarcode('');
-      alert('Book checked in successfully!');
+      setSuccessMessage('Book checked in successfully!');
+      setTimeout(() => setSuccessMessage(null), 3000);
     },
     onError: (error: Error) => {
-      alert(`Checkin failed: ${error.message}`);
+      setErrorMessage(`Checkin failed: ${error.message}`);
+      setTimeout(() => setErrorMessage(null), 5000);
     },
   });
 
@@ -70,6 +78,27 @@ export default function LoanManagement() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {successMessage && (
+        <div className="mb-6 p-4 rounded-lg flex items-center gap-3" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+          <Check className="h-5 w-5" style={{ color: '#22c55e' }} />
+          <p style={{ color: '#22c55e' }}>{successMessage}</p>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="mb-6 p-4 rounded-lg flex items-center gap-3" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+          <AlertCircle className="h-5 w-5" style={{ color: '#ef4444' }} />
+          <p style={{ color: '#ef4444' }}>{errorMessage}</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-6 p-4 rounded-lg flex items-center gap-3" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+          <AlertCircle className="h-5 w-5" style={{ color: '#ef4444' }} />
+          <p style={{ color: '#ef4444' }}>Failed to load loans. Please refresh the page.</p>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold" style={{ color: 'var(--ink-primary)' }}>
