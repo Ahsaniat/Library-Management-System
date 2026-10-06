@@ -1,17 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { bookRequestService, CreateBookRequestData } from '../services/bookRequestService';
 
-export function useMyBookRequests() {
+export function useMyBookRequests(page = 1) {
   return useQuery({
-    queryKey: ['bookRequests', 'my'],
-    queryFn: () => bookRequestService.getMyRequests(),
+    queryKey: ['bookRequests', 'my', page],
+    queryFn: () => bookRequestService.getMyRequests(page),
   });
 }
 
-export function useAllBookRequests(status?: string) {
+export function useAllBookRequests(status?: string, page = 1) {
   return useQuery({
-    queryKey: ['bookRequests', 'all', status],
-    queryFn: () => bookRequestService.getAllRequests(status),
+    queryKey: ['bookRequests', 'all', status, page],
+    queryFn: () => bookRequestService.getAllRequests(status, page),
   });
 }
 

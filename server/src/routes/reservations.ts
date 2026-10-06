@@ -4,6 +4,7 @@ import { authenticate, authorize, validate } from '../middleware';
 import {
   createReservationValidator,
   cancelReservationValidator,
+  reservationSearchValidator,
 } from '../validators';
 import { UserRole } from '../types';
 
@@ -19,6 +20,7 @@ router.post(
 router.get(
   '/my',
   authenticate,
+  validate(reservationSearchValidator),
   reservationController.getMyReservations.bind(reservationController)
 );
 
@@ -33,6 +35,7 @@ router.get(
   '/book/:bookId',
   authenticate,
   authorize(UserRole.ADMIN, UserRole.LIBRARIAN),
+  validate(reservationSearchValidator),
   reservationController.getBookReservations.bind(reservationController)
 );
 

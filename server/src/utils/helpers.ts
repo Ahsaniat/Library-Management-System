@@ -40,6 +40,24 @@ export function calculatePagination<T>(
   };
 }
 
+/** Normalizes page/limit query values with hard caps. */
+export function readPagination(
+  query: Record<string, unknown>,
+  defaultLimit = 50,
+  maxLimit = 100
+): { page: number; limit: number } {
+  const rawPage = Number(query.page ?? 1);
+  const rawLimit = Number(query.limit ?? defaultLimit);
+
+  return {
+    page: Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1,
+    limit:
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(Math.floor(rawLimit), maxLimit)
+        : defaultLimit,
+  };
+}
+
 export function sanitizeString(input: string): string {
   return input.trim().replace(/[<>]/g, '');
 }

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { BookPlus, Check, X, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAllBookRequests, useProcessBookRequest } from '../../hooks';
-import { Button, Input, LoadingSpinner } from '../../components';
+import { Button, Input, LoadingSpinner, Pagination } from '../../components';
 
 export default function BookRequestManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const { data: requests, isLoading, refetch } = useAllBookRequests(statusFilter || undefined);
+  const [page, setPage] = useState(1);
+  const { data, isLoading, refetch } = useAllBookRequests(statusFilter || undefined, page);
+  const requests = data?.requests ?? [];
   const processRequest = useProcessBookRequest();
   
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -82,7 +84,10 @@ export default function BookRequestManagement() {
         </label>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
           className="px-4 py-2 border rounded-lg"
           style={{ borderColor: 'var(--parchment-border)', backgroundColor: 'var(--parchment-light)' }}
         >
@@ -216,6 +221,10 @@ export default function BookRequestManagement() {
           </table>
         )}
       </div>
+
+      {data && (
+        <Pagination meta={data.pagination} onPageChange={setPage} className="mt-4" />
+      )}
     </div>
   );
 }

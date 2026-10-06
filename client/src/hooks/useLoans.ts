@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { loanService } from '../services/loanService';
 
-export function useMyLoans(status?: string) {
+export function useMyLoans(status?: string, page = 1) {
   return useQuery({
-    queryKey: ['loans', 'my', status],
-    queryFn: () => loanService.getMyLoans(status),
+    queryKey: ['loans', 'my', status, page],
+    queryFn: () => loanService.getMyLoans(status, page),
   });
 }
 
@@ -57,9 +57,9 @@ export function useCheckin() {
   });
 }
 
-export function useOverdueLoans() {
+export function useOverdueLoans(page = 1) {
   return useQuery({
-    queryKey: ['loans', 'overdue'],
-    queryFn: () => loanService.getOverdue(),
+    queryKey: ['loans', 'overdue', page],
+    queryFn: () => loanService.getOverdue(page),
   });
 }

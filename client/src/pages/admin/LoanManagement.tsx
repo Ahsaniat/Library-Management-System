@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RotateCcw, Check, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
-import { Button, Input, LoadingSpinner } from '../../components';
-import { Loan } from '../../types';
+import { Button, Input, LoadingSpinner, Pagination } from '../../components';
+import { Loan, PaginationMeta } from '../../types';
 
 interface LoansResponse {
   success: boolean;
   data: {
     loans: Loan[];
+    pagination: PaginationMeta;
   };
 }
 
@@ -17,17 +18,18 @@ interface CheckoutData {
   userId: string;
 }
 
-function useOverdueLoans() {
+function useOverdueLoans(page: number) {
   return useQuery({
-    queryKey: ['admin', 'loans', 'overdue'],
+    queryKey: ['admin', 'loans', 'overdue', page],
     queryFn: async () => {
-      const response = await api.get<LoansResponse>('/loans/overdue');
-      return response.data.data?.loans || [];
+      const response = await api.get<LoansResponse>('/loans/overdue', { params: { page } });
+      return response.data.data;
     },
   });
 }
 
 export default function LoanManagement() {
+  const [page, setPage] = useState(1);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({ bookCopyId: '', userId: '' });
@@ -36,7 +38,8 @@ export default function LoanManagement() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: overdueLoans, isLoading, error } = useOverdueLoans();
+  const { data: overdueData, isLoading, error } = useOverdueLoans(page);
+  const overdueLoans = overdueData?.loans ?? [];
 
   const checkout = useMutation({
     mutationFn: async (data: CheckoutData) => {
@@ -187,6 +190,10 @@ export default function LoanManagement() {
           </table>
         )}
       </div>
+
+      {overdueData && (
+        <Pagination meta={overdueData.pagination} onPageChange={setPage} className="mt-4" />
+      )}
 
       {showCheckoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

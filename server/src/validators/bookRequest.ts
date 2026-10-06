@@ -25,4 +25,11 @@ export const bookRequestSearchValidator = [
     .optional()
     .isIn(['pending', 'approved', 'rejected', 'acquired', 'cancelled'])
     .withMessage('Invalid status filter'),
+  query('page').optional().isInt({ min: 1 }).toInt(),
+  query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+];
+
+export const bookRequestPaginationValidator = [
+  query('page').optional().isInt({ min: 1 }).toInt(),
+  query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
 ];

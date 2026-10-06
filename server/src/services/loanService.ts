@@ -33,6 +33,13 @@ interface CheckinResult {
   fine?: { amount: number; reason: string };
 }
 
+interface ListOptions {
+  page?: number;
+  limit?: number;
+}
+
+const DEFAULT_PAGE_SIZE = 50;
+
 export class LoanService {
   async selfCheckout(data: SelfCheckoutData): Promise<Loan> {
     return sequelize.transaction(async (t: Transaction) => {
@@ -408,8 +415,13 @@ export class LoanService {
     });
   }
 
-  async getOverdueLoans(): Promise<Loan[]> {
-    return Loan.findAll({
+  async getOverdueLoans(
+    options: ListOptions = {}
+  ): Promise<{ rows: Loan[]; count: number }> {
+    const page = options.page ?? 1;
+    const limit = options.limit ?? DEFAULT_PAGE_SIZE;
+
+    return Loan.findAndCountAll({
       where: {
         status: LoanStatus.ACTIVE,
         dueDate: { [Op.lt]: new Date() },
@@ -419,21 +431,32 @@ export class LoanService {
         { model: User, as: 'borrower', attributes: ['id', 'email', 'firstName', 'lastName'] },
       ],
       order: [['dueDate', 'ASC']],
+      limit,
+      offset: (page - 1) * limit,
     });
   }
 
-  async getUserLoans(userId: string, status?: LoanStatus): Promise<Loan[]> {
+  async getUserLoans(
+    userId: string,
+    status?: LoanStatus,
+    options: ListOptions = {}
+  ): Promise<{ rows: Loan[]; count: number }> {
     const where: { userId: string; status?: LoanStatus } = { userId };
     if (status) {
       where.status = status;
     }
 
-    return Loan.findAll({
+    const page = options.page ?? 1;
+    const limit = options.limit ?? DEFAULT_PAGE_SIZE;
+
+    return Loan.findAndCountAll({
       where,
       include: [
         { model: BookCopy, as: 'bookCopy', include: [{ model: Book, as: 'book' }] },
       ],
       order: [['borrowedAt', 'DESC']],
+      limit,
+      offset: (page - 1) * limit,
     });
   }
 }

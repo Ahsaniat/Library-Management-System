@@ -7,12 +7,15 @@ import { formatDate, isOverdue, getDaysUntilDue } from '../utils';
 
 export default function Dashboard() {
   const user = useAuthStore((state) => state.user);
-  const { data: loans, isLoading: loansLoading } = useMyLoans('active');
-  const { data: reservations, isLoading: reservationsLoading } = useMyReservations();
+  const { data: loansData, isLoading: loansLoading } = useMyLoans('active');
+  const { data: reservationsData, isLoading: reservationsLoading } = useMyReservations();
 
-  const activeLoans = loans?.filter((l) => l.status === 'active') ?? [];
+  const activeLoans = loansData?.loans?.filter((l) => l.status === 'active') ?? [];
   const overdueLoans = activeLoans.filter((l) => isOverdue(l.dueDate));
-  const pendingReservations = reservations?.filter((r) => r.status === 'pending' || r.status === 'ready') ?? [];
+  const pendingReservations =
+    reservationsData?.reservations?.filter(
+      (r) => r.status === 'pending' || r.status === 'ready'
+    ) ?? [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

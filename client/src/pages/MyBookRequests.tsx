@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { BookPlus, Check, AlertCircle, Clock, X, CheckCircle } from 'lucide-react';
 import { useMyBookRequests, useCreateBookRequest, useCancelBookRequest } from '../hooks';
-import { LoadingSpinner, Button, Input } from '../components';
+import { LoadingSpinner, Button, Input, Pagination } from '../components';
 import { CreateBookRequestData } from '../services/bookRequestService';
 
 export default function MyBookRequests() {
-  const { data: requests, isLoading, refetch } = useMyBookRequests();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, refetch } = useMyBookRequests(page);
+  const requests = data?.requests ?? [];
   const createRequest = useCreateBookRequest();
   const cancelRequest = useCancelBookRequest();
   
@@ -170,7 +172,7 @@ export default function MyBookRequests() {
         </div>
       )}
 
-      {!requests || requests.length === 0 ? (
+      {requests.length === 0 ? (
         <div className="text-center py-20 rounded-lg shadow" style={{ backgroundColor: 'var(--parchment-light)' }}>
           <BookPlus className="h-16 w-16 mx-auto mb-4 opacity-30" style={{ color: 'var(--ink-secondary)' }} />
           <p className="text-lg mb-4" style={{ color: 'var(--ink-secondary)' }}>
@@ -179,8 +181,9 @@ export default function MyBookRequests() {
           <Button onClick={() => setShowForm(true)}>Request a Book</Button>
         </div>
       ) : (
-        <div className="rounded-lg shadow-md overflow-hidden" style={{ backgroundColor: 'var(--parchment-light)' }}>
-          <table className="min-w-full divide-y" style={{ borderColor: 'var(--parchment-border)' }}>
+        <>
+          <div className="rounded-lg shadow-md overflow-hidden" style={{ backgroundColor: 'var(--parchment-light)' }}>
+            <table className="min-w-full divide-y" style={{ borderColor: 'var(--parchment-border)' }}>
             <thead style={{ backgroundColor: 'var(--parchment-dark)' }}>
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--ink-secondary)' }}>
@@ -238,7 +241,11 @@ export default function MyBookRequests() {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+          {data && (
+            <Pagination meta={data.pagination} onPageChange={setPage} className="mt-4" />
+          )}
+        </>
       )}
     </div>
   );

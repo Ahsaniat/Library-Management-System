@@ -93,7 +93,7 @@ export class BookController {
 
   async getPopular(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 1), 50);
       const books = await bookService.getPopular(limit);
       const response: ApiResponse = {
         success: true,
@@ -108,7 +108,7 @@ export class BookController {
 
   async getRecent(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 1), 50);
       const books = await bookService.getRecentlyAdded(limit);
       const response: ApiResponse = {
         success: true,
@@ -176,7 +176,7 @@ export class BookController {
   async searchOpenLibrary(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const query = req.query.q as string;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 1), 50);
       
       if (!query) {
         const response: ApiResponse = {

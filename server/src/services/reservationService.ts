@@ -12,6 +12,13 @@ interface CreateReservationData {
   userId: string;
 }
 
+interface ListOptions {
+  page?: number;
+  limit?: number;
+}
+
+const DEFAULT_PAGE_SIZE = 50;
+
 export class ReservationService {
   async create(data: CreateReservationData): Promise<Reservation> {
     return sequelize.transaction(async (t: Transaction) => {
@@ -125,18 +132,32 @@ export class ReservationService {
     });
   }
 
-  async getUserReservations(userId: string): Promise<Reservation[]> {
-    return Reservation.findAll({
+  async getUserReservations(
+    userId: string,
+    options: ListOptions = {}
+  ): Promise<{ rows: Reservation[]; count: number }> {
+    const page = options.page ?? 1;
+    const limit = options.limit ?? DEFAULT_PAGE_SIZE;
+
+    return Reservation.findAndCountAll({
       where: { userId },
       include: [
         { model: Book, as: 'book', attributes: ['id', 'title', 'isbn', 'coverImage'] },
       ],
       order: [['reservedAt', 'DESC']],
+      limit,
+      offset: (page - 1) * limit,
     });
   }
 
-  async getBookReservations(bookId: string): Promise<Reservation[]> {
-    return Reservation.findAll({
+  async getBookReservations(
+    bookId: string,
+    options: ListOptions = {}
+  ): Promise<{ rows: Reservation[]; count: number }> {
+    const page = options.page ?? 1;
+    const limit = options.limit ?? DEFAULT_PAGE_SIZE;
+
+    return Reservation.findAndCountAll({
       where: {
         bookId,
         status: { [Op.in]: [ReservationStatus.PENDING, ReservationStatus.READY] },
@@ -145,6 +166,8 @@ export class ReservationService {
         { model: User, as: 'user', attributes: ['id', 'email', 'firstName', 'lastName'] },
       ],
       order: [['queuePosition', 'ASC']],
+      limit,
+      offset: (page - 1) * limit,
     });
   }
 

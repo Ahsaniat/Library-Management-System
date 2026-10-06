@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useMyReservations, useCancelReservation } from '../hooks';
-import { LoadingSpinner, Button } from '../components';
+import { LoadingSpinner, Button, Pagination } from '../components';
 import { formatDate } from '../utils';
 import { Link } from 'react-router-dom';
 
 export default function MyReservations() {
-  const { data: reservations, isLoading } = useMyReservations();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useMyReservations(page);
+  const reservations = data?.reservations ?? [];
   const cancelReservation = useCancelReservation();
 
   const handleCancel = async (id: string) => {
@@ -26,7 +29,7 @@ export default function MyReservations() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">My Reservations</h1>
 
-      {reservations?.length === 0 ? (
+      {reservations.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-lg shadow">
           <p className="text-gray-600 text-lg mb-4">You have no reservations.</p>
           <Link to="/books">
@@ -34,8 +37,9 @@ export default function MyReservations() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+        <>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -115,7 +119,11 @@ export default function MyReservations() {
               })}
             </tbody>
           </table>
-        </div>
+          </div>
+          {data && (
+            <Pagination meta={data.pagination} onPageChange={setPage} className="mt-4" />
+          )}
+        </>
       )}
     </div>
   );

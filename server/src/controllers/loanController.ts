@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { loanService } from '../services';
 import { ApiResponse, LoanStatus } from '../types';
+import { calculatePagination, readPagination } from '../utils/helpers';
 
 export class LoanController {
   async selfCheckout(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -74,10 +75,11 @@ export class LoanController {
 
   async getOverdue(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const loans = await loanService.getOverdueLoans();
+      const pagination = readPagination(req.query as Record<string, unknown>);
+      const { rows, count } = await loanService.getOverdueLoans(pagination);
       const response: ApiResponse = {
         success: true,
-        data: { loans },
+        data: { loans: rows, pagination: calculatePagination(rows, count, pagination) },
         requestId: req.requestId,
       };
       res.json(response);
@@ -90,10 +92,11 @@ export class LoanController {
     try {
       const userId = (req.params.userId as string) ?? req.user!.id;
       const status = req.query.status as LoanStatus | undefined;
-      const loans = await loanService.getUserLoans(userId, status);
+      const pagination = readPagination(req.query as Record<string, unknown>);
+      const { rows, count } = await loanService.getUserLoans(userId, status, pagination);
       const response: ApiResponse = {
         success: true,
-        data: { loans },
+        data: { loans: rows, pagination: calculatePagination(rows, count, pagination) },
         requestId: req.requestId,
       };
       res.json(response);
@@ -105,10 +108,11 @@ export class LoanController {
   async getMyLoans(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as LoanStatus | undefined;
-      const loans = await loanService.getUserLoans(req.user!.id, status);
+      const pagination = readPagination(req.query as Record<string, unknown>);
+      const { rows, count } = await loanService.getUserLoans(req.user!.id, status, pagination);
       const response: ApiResponse = {
         success: true,
-        data: { loans },
+        data: { loans: rows, pagination: calculatePagination(rows, count, pagination) },
         requestId: req.requestId,
       };
       res.json(response);

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { bookRequestService } from '../services';
 import { BookRequestStatus } from '../models/BookRequest';
 import { ApiResponse } from '../types';
+import { calculatePagination, readPagination } from '../utils/helpers';
 
 export class BookRequestController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -28,11 +29,15 @@ export class BookRequestController {
 
   async getMyRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const requests = await bookRequestService.getUserRequests(req.user!.id);
+      const pagination = readPagination(req.query as Record<string, unknown>);
+      const { rows, count } = await bookRequestService.getUserRequests(req.user!.id, pagination);
 
       const response: ApiResponse = {
         success: true,
-        data: { requests },
+        data: {
+          requests: rows,
+          pagination: calculatePagination(rows, count, pagination),
+        },
         requestId: req.requestId,
       };
       res.json(response);
@@ -44,11 +49,15 @@ export class BookRequestController {
   async getAllRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as BookRequestStatus | undefined;
-      const requests = await bookRequestService.getAllRequests(status);
+      const pagination = readPagination(req.query as Record<string, unknown>);
+      const { rows, count } = await bookRequestService.getAllRequests(status, pagination);
 
       const response: ApiResponse = {
         success: true,
-        data: { requests },
+        data: {
+          requests: rows,
+          pagination: calculatePagination(rows, count, pagination),
+        },
         requestId: req.requestId,
       };
       res.json(response);

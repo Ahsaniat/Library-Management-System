@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { reservationService } from '../services';
 import { ApiResponse } from '../types';
+import { calculatePagination, readPagination } from '../utils/helpers';
 
 export class ReservationController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -42,10 +43,17 @@ export class ReservationController {
 
   async getMyReservations(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const reservations = await reservationService.getUserReservations(req.user!.id);
+      const pagination = readPagination(req.query as Record<string, unknown>);
+      const { rows, count } = await reservationService.getUserReservations(
+        req.user!.id,
+        pagination
+      );
       const response: ApiResponse = {
         success: true,
-        data: { reservations },
+        data: {
+          reservations: rows,
+          pagination: calculatePagination(rows, count, pagination),
+        },
         requestId: req.requestId,
       };
       res.json(response);
@@ -56,10 +64,17 @@ export class ReservationController {
 
   async getBookReservations(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const reservations = await reservationService.getBookReservations(req.params.bookId as string);
+      const pagination = readPagination(req.query as Record<string, unknown>);
+      const { rows, count } = await reservationService.getBookReservations(
+        req.params.bookId as string,
+        pagination
+      );
       const response: ApiResponse = {
         success: true,
-        data: { reservations },
+        data: {
+          reservations: rows,
+          pagination: calculatePagination(rows, count, pagination),
+        },
         requestId: req.requestId,
       };
       res.json(response);

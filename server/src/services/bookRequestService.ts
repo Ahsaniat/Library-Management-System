@@ -19,6 +19,13 @@ interface ProcessBookRequestData {
   processedBy: string;
 }
 
+interface ListOptions {
+  page?: number;
+  limit?: number;
+}
+
+const DEFAULT_PAGE_SIZE = 50;
+
 export class BookRequestService {
   async create(data: CreateBookRequestData): Promise<BookRequest> {
     if (data.isbn) {
@@ -58,26 +65,42 @@ export class BookRequestService {
     return request;
   }
 
-  async getUserRequests(userId: string): Promise<BookRequest[]> {
-    return BookRequest.findAll({
+  async getUserRequests(
+    userId: string,
+    options: ListOptions = {}
+  ): Promise<{ rows: BookRequest[]; count: number }> {
+    const page = options.page ?? 1;
+    const limit = options.limit ?? DEFAULT_PAGE_SIZE;
+
+    return BookRequest.findAndCountAll({
       where: { userId },
       order: [['createdAt', 'DESC']],
+      limit,
+      offset: (page - 1) * limit,
     });
   }
 
-  async getAllRequests(status?: BookRequestStatus): Promise<BookRequest[]> {
+  async getAllRequests(
+    status?: BookRequestStatus,
+    options: ListOptions = {}
+  ): Promise<{ rows: BookRequest[]; count: number }> {
     const where: { status?: BookRequestStatus } = {};
     if (status) {
       where.status = status;
     }
 
-    return BookRequest.findAll({
+    const page = options.page ?? 1;
+    const limit = options.limit ?? DEFAULT_PAGE_SIZE;
+
+    return BookRequest.findAndCountAll({
       where,
       include: [
         { model: User, as: 'user', attributes: ['id', 'email', 'firstName', 'lastName'] },
         { model: User, as: 'processor', attributes: ['id', 'email', 'firstName', 'lastName'] },
       ],
       order: [['createdAt', 'DESC']],
+      limit,
+      offset: (page - 1) * limit,
     });
   }
 

@@ -1,5 +1,10 @@
 import api from './api';
-import { ApiResponse, Loan } from '../types';
+import { ApiResponse, Loan, PaginationMeta } from '../types';
+
+export interface PaginatedLoans {
+  loans: Loan[];
+  pagination: PaginationMeta;
+}
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export interface CopyReference {
@@ -14,11 +19,11 @@ export function toCopyReference(value: string): CopyReference {
 }
 
 export const loanService = {
-  async getMyLoans(status?: string): Promise<Loan[]> {
-    const response = await api.get<ApiResponse<{ loans: Loan[] }>>('/loans/my', {
-      params: status ? { status } : {},
+  async getMyLoans(status?: string, page = 1): Promise<PaginatedLoans> {
+    const response = await api.get<ApiResponse<PaginatedLoans>>('/loans/my', {
+      params: { ...(status ? { status } : {}), page },
     });
-    return response.data.data!.loans;
+    return response.data.data!;
   },
 
   async renew(loanId: string): Promise<Loan> {
@@ -49,8 +54,10 @@ export const loanService = {
     return response.data.data!;
   },
 
-  async getOverdue(): Promise<Loan[]> {
-    const response = await api.get<ApiResponse<{ loans: Loan[] }>>('/loans/overdue');
-    return response.data.data!.loans;
+  async getOverdue(page = 1): Promise<PaginatedLoans> {
+    const response = await api.get<ApiResponse<PaginatedLoans>>('/loans/overdue', {
+      params: { page },
+    });
+    return response.data.data!;
   },
 };

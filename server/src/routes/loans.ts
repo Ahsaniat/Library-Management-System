@@ -46,6 +46,7 @@ router.get(
   '/overdue',
   authenticate,
   authorize(UserRole.ADMIN, UserRole.LIBRARIAN),
+  validate(loanSearchValidator),
   loanController.getOverdue.bind(loanController)
 );
 

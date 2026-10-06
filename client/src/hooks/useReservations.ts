@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { reservationService } from '../services/reservationService';
 
-export function useMyReservations() {
+export function useMyReservations(page = 1) {
   return useQuery({
-    queryKey: ['reservations', 'my'],
-    queryFn: () => reservationService.getMyReservations(),
+    queryKey: ['reservations', 'my', page],
+    queryFn: () => reservationService.getMyReservations(page),
   });
 }
 

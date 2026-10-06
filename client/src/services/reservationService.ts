@@ -1,12 +1,17 @@
 import api from './api';
-import { ApiResponse, Reservation } from '../types';
+import { ApiResponse, PaginationMeta, Reservation } from '../types';
+
+export interface PaginatedReservations {
+  reservations: Reservation[];
+  pagination: PaginationMeta;
+}
 
 export const reservationService = {
-  async getMyReservations(): Promise<Reservation[]> {
-    const response = await api.get<ApiResponse<{ reservations: Reservation[] }>>(
-      '/reservations/my'
-    );
-    return response.data.data!.reservations;
+  async getMyReservations(page = 1): Promise<PaginatedReservations> {
+    const response = await api.get<ApiResponse<PaginatedReservations>>('/reservations/my', {
+      params: { page },
+    });
+    return response.data.data!;
   },
 
   async create(bookId: string): Promise<Reservation> {

@@ -6,6 +6,7 @@ import {
   bookRequestIdValidator,
   processBookRequestValidator,
   bookRequestSearchValidator,
+  bookRequestPaginationValidator,
 } from '../validators';
 import { UserRole } from '../types';
 
@@ -21,6 +22,7 @@ router.post(
 router.get(
   '/my',
   authenticate,
+  validate(bookRequestPaginationValidator),
   bookRequestController.getMyRequests.bind(bookRequestController)
 );
 
