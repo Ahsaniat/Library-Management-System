@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, CookieOptions } from 'express';
-import { authService } from '../services';
+import { authService, auditService } from '../services';
 import { ApiResponse } from '../types';
 import config from '../config';
 import { durationToMs } from '../utils/jwt';
@@ -58,6 +58,15 @@ export class AuthController {
         userAgent: req.get('user-agent'),
       });
       res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, refreshCookieOptions());
+      await auditService.record({
+        userId: result.user.id,
+        action: 'auth.login',
+        entityType: 'User',
+        entityId: result.user.id,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Login successful',
@@ -123,6 +132,15 @@ export class AuthController {
     try {
       const { currentPassword, newPassword } = req.body;
       await authService.changePassword(req.user!.id, currentPassword, newPassword);
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'auth.password_changed',
+        entityType: 'User',
+        entityId: req.user?.id,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Password changed successfully',

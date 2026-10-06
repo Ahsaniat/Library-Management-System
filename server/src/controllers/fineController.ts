@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { fineService } from '../services';
+import { fineService, auditService } from '../services';
 import { ApiResponse, FineStatus } from '../types';
 import { calculatePagination, readPagination } from '../utils/helpers';
 
@@ -66,6 +66,16 @@ export class FineController {
         notes,
         processedBy: req.user!.id,
       });
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'fine.paid',
+        entityType: 'Fine',
+        entityId: fine.id,
+        newValues: { amount, method, receiptNumber: payment.receiptNumber },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Payment recorded',
@@ -86,6 +96,16 @@ export class FineController {
         reason,
         req.user!.id
       );
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'fine.waived',
+        entityType: 'Fine',
+        entityId: fine.id,
+        newValues: { reason },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Fine waived',

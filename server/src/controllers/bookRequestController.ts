@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { bookRequestService } from '../services';
+import { bookRequestService, auditService } from '../services';
 import { BookRequestStatus } from '../models/BookRequest';
 import { ApiResponse } from '../types';
 import { calculatePagination, readPagination } from '../utils/helpers';
@@ -87,6 +87,16 @@ export class BookRequestController {
         status: req.body.status,
         adminNotes: req.body.adminNotes,
         processedBy: req.user!.id,
+      });
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'book_request.processed',
+        entityType: 'BookRequest',
+        entityId: request.id,
+        newValues: { status: req.body.status },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
       });
 
       const response: ApiResponse = {

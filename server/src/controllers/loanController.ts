@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { loanService } from '../services';
+import { loanService, auditService } from '../services';
 import { ApiResponse, LoanStatus } from '../types';
 import { calculatePagination, readPagination } from '../utils/helpers';
 
@@ -9,6 +9,16 @@ export class LoanController {
       const loan = await loanService.selfCheckout({
         bookId: req.body.bookId,
         userId: req.user!.id,
+      });
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'loan.self_checkout',
+        entityType: 'Loan',
+        entityId: loan.id,
+        newValues: { bookId: req.body.bookId },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
       });
       const response: ApiResponse = {
         success: true,
@@ -28,6 +38,16 @@ export class LoanController {
         ...req.body,
         librarianId: req.user?.id,
       });
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'loan.checked_out',
+        entityType: 'Loan',
+        entityId: loan.id,
+        newValues: { userId: req.body.userId },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Book checked out successfully',
@@ -44,6 +64,16 @@ export class LoanController {
     try {
       const { bookCopyId, barcode, notes } = req.body;
       const result = await loanService.checkin({ bookCopyId, barcode }, req.user?.id, notes);
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'loan.checked_in',
+        entityType: 'Loan',
+        entityId: result.loan.id,
+        newValues: { fine: result.fine?.amount },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: result.fine

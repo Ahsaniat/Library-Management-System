@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { settingService } from '../services';
+import { settingService, auditService } from '../services';
 import { ApiResponse } from '../types';
 import { NotFoundError } from '../utils/errors';
 
@@ -44,6 +44,16 @@ export class SettingController {
       }
 
       const setting = await settingService.upsert(key, String(value));
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'setting.updated',
+        entityType: 'Setting',
+        entityId: setting.id,
+        newValues: { key, value: String(value) },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Setting updated',

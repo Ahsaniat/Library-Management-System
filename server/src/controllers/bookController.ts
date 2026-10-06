@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { bookService } from '../services';
+import { bookService, auditService } from '../services';
 import { ApiResponse } from '../types';
 
 export class BookController {
@@ -50,6 +50,16 @@ export class BookController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const book = await bookService.create(req.body);
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'book.created',
+        entityType: 'Book',
+        entityId: book.id,
+        newValues: { isbn: book.isbn, title: book.title },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Book created successfully',
@@ -65,6 +75,16 @@ export class BookController {
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const book = await bookService.update(req.params.id as string, req.body);
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'book.updated',
+        entityType: 'Book',
+        entityId: book.id,
+        newValues: { ...req.body },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Book updated successfully',
@@ -80,6 +100,15 @@ export class BookController {
   async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       await bookService.delete(req.params.id as string);
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'book.deleted',
+        entityType: 'Book',
+        entityId: req.params.id as string,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Book deleted successfully',

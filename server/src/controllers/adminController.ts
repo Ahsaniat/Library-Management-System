@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
 import { User, Loan } from '../models';
-import { authService } from '../services';
+import { authService, auditService } from '../services';
 import { ApiResponse, UserRole, LoanStatus } from '../types';
 import { NotFoundError, ForbiddenError, ValidationError, ConflictError } from '../utils/errors';
 import { calculatePagination } from '../utils/helpers';
@@ -90,6 +90,17 @@ export class AdminController {
         role,
       });
 
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'user.created',
+        entityType: 'User',
+        entityId: user.id,
+        newValues: { email: user.email, role: user.role },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
+      });
+
       const response: ApiResponse = {
         success: true,
         message: 'User created successfully',
@@ -152,6 +163,7 @@ export class AdminController {
         throw new NotFoundError('User');
       }
 
+      const previousRole = user.role;
       await user.update({ role: role as UserRole });
 
       logger.info({
@@ -159,6 +171,18 @@ export class AdminController {
         adminId: req.user?.id,
         userId,
         newRole: role,
+      });
+
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'user.role_updated',
+        entityType: 'User',
+        entityId: userId,
+        oldValues: { role: previousRole },
+        newValues: { role },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
       });
 
       const response: ApiResponse = {
@@ -198,6 +222,17 @@ export class AdminController {
         adminId: req.user?.id,
         userId,
         isActive,
+      });
+
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'user.status_updated',
+        entityType: 'User',
+        entityId: userId,
+        newValues: { isActive },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
       });
 
       const response: ApiResponse = {
@@ -240,6 +275,17 @@ export class AdminController {
         action: 'user_deleted',
         adminId: req.user?.id,
         userId,
+      });
+
+      await auditService.record({
+        userId: req.user?.id,
+        action: 'user.deleted',
+        entityType: 'User',
+        entityId: userId,
+        oldValues: { email: user.email, role: user.role },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.requestId,
       });
 
       const response: ApiResponse = {
