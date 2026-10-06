@@ -44,8 +44,8 @@ jobs:
       - name: Run TypeScript check
         run: cd server && npx tsc --noEmit
 
-      - name: Run unit tests
-        run: cd server && npm run test:unit
+      - name: Run unit tests with coverage gate
+        run: cd server && npm run test:coverage
         env:
           NODE_ENV: test
           DB_HOST: localhost
