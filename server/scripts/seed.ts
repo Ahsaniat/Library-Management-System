@@ -5,10 +5,14 @@ import sequelize from '../src/config/database';
 async function seed() {
   console.log('Starting database seed...');
 
+  // Models must be registered on the sequelize instance before sync() runs,
+  // otherwise sync creates nothing on a fresh database.
+  const { User, Author, Publisher, Category, Library, Book, BookCopy } = await import(
+    '../src/models'
+  );
+
   await sequelize.sync({ force: true });
   console.log('Database synced');
-
-  const { User, Author, Publisher, Category, Library, Book, BookCopy } = await import('../src/models');
 
   const library = await Library.create({
     name: 'Main Library',
