@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import { Notification, User } from '../models';
 import { NotificationType } from '../types';
 import { emailService } from './emailService';
+import { settingService } from './settingService';
 import logger from '../utils/logger';
 
 interface CreateNotificationData {
@@ -190,12 +191,13 @@ export class NotificationService {
     });
 
     let sentCount = 0;
+    const finePerDay = await settingService.getNumber('fine.perDay', 0.5);
     for (const loan of overdueLoans) {
       const borrower = loan.get('borrower') as User;
       const bookCopy = loan.get('bookCopy') as { book?: { title: string } };
       const bookTitle = bookCopy?.book?.title ?? 'Unknown';
       const daysOverdue = Math.ceil((now.getTime() - loan.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-      const fine = daysOverdue * 0.5;
+      const fine = daysOverdue * finePerDay;
 
       await this.createAndSend({
         userId: borrower.id,

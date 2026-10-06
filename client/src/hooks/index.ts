@@ -5,3 +5,4 @@ export { useMyReservations, useCreateReservation, useCancelReservation } from '.
 export { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from './useNotifications';
 export { useMyBookRequests, useAllBookRequests, useCreateBookRequest, useCancelBookRequest, useProcessBookRequest } from './useBookRequests';
 export { useMyWishlist, useIsInWishlist, useAddToWishlist, useRemoveFromWishlist, useUpdateWishlistPriority, useUpdateWishlistNotes } from './useWishlist';
+export { useSettings, useUpdateSetting } from './useSettings';

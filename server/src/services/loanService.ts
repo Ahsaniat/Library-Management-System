@@ -4,6 +4,7 @@ import sequelize from '../config/database';
 import { NotFoundError, ConflictError, ValidationError } from '../utils/errors';
 import { LoanStatus, BookStatus, ReservationStatus } from '../types';
 import { calculateDueDate, calculateFine } from '../utils/helpers';
+import { settingService } from './settingService';
 import logger from '../utils/logger';
 
 interface CheckoutData {
@@ -69,7 +70,12 @@ export class LoanService {
         transaction: t,
       });
 
-      const maxLoans = 5;
+      const [maxLoans, loanDays, maxRenewals] = await Promise.all([
+        settingService.getNumber('loan.maxActive', 5),
+        settingService.getNumber('loan.periodDays', 14),
+        settingService.getNumber('loan.maxRenewals', 2),
+      ]);
+
       if (activeLoans >= maxLoans) {
         throw new ValidationError(`You have reached the maximum of ${maxLoans} active loans`);
       }
@@ -93,7 +99,7 @@ export class LoanService {
         throw new ConflictError('You already have an active loan for this book');
       }
 
-      const dueDate = calculateDueDate(14);
+      const dueDate = calculateDueDate(loanDays);
 
       await lockedCopy.update({ status: BookStatus.BORROWED }, { transaction: t });
 
@@ -102,6 +108,7 @@ export class LoanService {
           bookCopyId: lockedCopy.id,
           userId: data.userId,
           dueDate,
+          maxRenewals,
           status: LoanStatus.ACTIVE,
         },
         { transaction: t }
@@ -166,12 +173,17 @@ export class LoanService {
         transaction: t,
       });
 
-      const maxLoans = 5;
+      const [maxLoans, loanDays, maxRenewals] = await Promise.all([
+        settingService.getNumber('loan.maxActive', 5),
+        settingService.getNumber('loan.periodDays', 14),
+        settingService.getNumber('loan.maxRenewals', 2),
+      ]);
+
       if (activeLoans >= maxLoans) {
         throw new ValidationError(`Maximum ${maxLoans} active loans allowed`);
       }
 
-      const dueDate = data.dueDate ?? calculateDueDate(14);
+      const dueDate = data.dueDate ?? calculateDueDate(loanDays);
 
       await bookCopy.update({ status: BookStatus.BORROWED }, { transaction: t });
 
@@ -181,6 +193,7 @@ export class LoanService {
           userId: data.userId,
           librarianId: data.librarianId,
           dueDate,
+          maxRenewals,
           status: LoanStatus.ACTIVE,
         },
         { transaction: t }
@@ -242,7 +255,8 @@ export class LoanService {
       let fineResult: { amount: number; reason: string } | undefined;
 
       if (isOverdue) {
-        const fineAmount = calculateFine(loan.dueDate);
+        const finePerDay = await settingService.getNumber('fine.perDay', 0.5);
+        const fineAmount = calculateFine(loan.dueDate, finePerDay);
         if (fineAmount > 0) {
           await Fine.create(
             {
@@ -307,7 +321,8 @@ export class LoanService {
         throw new ValidationError('Book has pending reservations');
       }
 
-      const newDueDate = calculateDueDate(14);
+      const loanDays = await settingService.getNumber('loan.periodDays', 14);
+      const newDueDate = calculateDueDate(loanDays);
       await loan.update(
         {
           dueDate: newDueDate,

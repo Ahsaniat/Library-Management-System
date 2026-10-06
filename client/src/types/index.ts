@@ -115,6 +115,15 @@ export interface Reservation {
   book?: Book;
 }
 
+export interface Setting {
+  id: string;
+  key: string;
+  value: string;
+  type: 'string' | 'number' | 'boolean' | 'json';
+  description?: string;
+  isPublic: boolean;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;

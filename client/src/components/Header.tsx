@@ -94,6 +94,22 @@ export default function Header() {
                       >
                         Reports
                       </Link>
+                      <Link
+                        to="/admin/book-requests"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                        style={{ color: 'var(--ink-primary)' }}
+                      >
+                        Book Requests
+                      </Link>
+                      {user?.role === UserRole.ADMIN && (
+                        <Link
+                          to="/admin/settings"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          style={{ color: 'var(--ink-primary)' }}
+                        >
+                          Settings
+                        </Link>
+                      )}
                     </div>
                   </div>
                 )}
@@ -161,6 +177,10 @@ export default function Header() {
                       <Link to="/admin/books">Book Management</Link>
                       <Link to="/admin/loans">Loan Management</Link>
                       <Link to="/admin/reports">Reports</Link>
+                      <Link to="/admin/book-requests">Book Requests</Link>
+                      {user?.role === UserRole.ADMIN && (
+                        <Link to="/admin/settings">Settings</Link>
+                      )}
                     </>
                   )}
                   <button onClick={handleLogout} className="text-left">

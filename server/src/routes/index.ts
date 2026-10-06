@@ -8,6 +8,7 @@ import reportRoutes from './reports';
 import adminRoutes from './admin';
 import bookRequestRoutes from './bookRequests';
 import wishlistRoutes from './wishlist';
+import settingRoutes from './settings';
 import { ApiResponse } from '../types';
 
 const router = Router();
@@ -33,5 +34,6 @@ router.use('/reports', reportRoutes);
 router.use('/admin', adminRoutes);
 router.use('/book-requests', bookRequestRoutes);
 router.use('/wishlist', wishlistRoutes);
+router.use('/settings', settingRoutes);
 
 export default router;

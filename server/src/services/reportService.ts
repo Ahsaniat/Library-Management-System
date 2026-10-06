@@ -1,6 +1,7 @@
 import { Op, fn, col } from 'sequelize';
 import { User, Book, BookCopy, Loan, Fine, Payment, Category, Library } from '../models';
 import { LoanStatus, BookStatus, FineStatus } from '../types';
+import { settingService } from './settingService';
 
 interface DateRange {
   startDate: Date;
@@ -186,6 +187,7 @@ export class ReportService {
 
   async getOverdueReport(): Promise<OverdueReport> {
     const now = new Date();
+    const finePerDay = await settingService.getNumber('fine.perDay', 0.5);
 
     const overdueLoans = await Loan.findAll({
       where: {
@@ -203,7 +205,7 @@ export class ReportService {
       const borrower = loan.get('borrower') as User;
       const bookCopy = loan.get('bookCopy') as BookCopy & { book?: Book };
       const daysOverdue = Math.ceil((now.getTime() - loan.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-      const estimatedFine = daysOverdue * 0.5;
+      const estimatedFine = daysOverdue * finePerDay;
 
       return {
         loanId: loan.id,

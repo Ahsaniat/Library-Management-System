@@ -14,7 +14,7 @@ import MyWishlist from './pages/MyWishlist';
 import MyBookRequests from './pages/MyBookRequests';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
-import { AdminDashboard, UserManagement, BookManagement, LoanManagement, Reports, BookRequestManagement } from './pages/admin';
+import { AdminDashboard, UserManagement, BookManagement, LoanManagement, Reports, BookRequestManagement, Settings } from './pages/admin';
 import { UserRole } from './types';
 
 function App() {
@@ -119,6 +119,14 @@ function App() {
           element={
             <RoleProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.LIBRARIAN]}>
               <BookRequestManagement />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/settings"
+          element={
+            <RoleProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <Settings />
             </RoleProtectedRoute>
           }
         />
