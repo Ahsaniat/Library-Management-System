@@ -173,7 +173,7 @@ export default function MyBookRequests() {
         <div className="text-center py-20 rounded-lg shadow" style={{ backgroundColor: 'var(--parchment-light)' }}>
           <BookPlus className="h-16 w-16 mx-auto mb-4 opacity-30" style={{ color: 'var(--ink-secondary)' }} />
           <p className="text-lg mb-4" style={{ color: 'var(--ink-secondary)' }}>
-            You haven't requested any books yet.
+            You haven&apos;t requested any books yet.
           </p>
           <Button onClick={() => setShowForm(true)}>Request a Book</Button>
         </div>

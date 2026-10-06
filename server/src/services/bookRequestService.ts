@@ -1,4 +1,4 @@
-import { Op, Transaction } from 'sequelize';
+import { Transaction } from 'sequelize';
 import { BookRequest, User, Book } from '../models';
 import { BookRequestStatus } from '../models/BookRequest';
 import sequelize from '../config/database';

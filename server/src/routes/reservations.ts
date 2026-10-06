@@ -3,7 +3,6 @@ import { reservationController } from '../controllers';
 import { authenticate, authorize, validate } from '../middleware';
 import {
   createReservationValidator,
-  reservationIdValidator,
   cancelReservationValidator,
 } from '../validators';
 import { UserRole } from '../types';

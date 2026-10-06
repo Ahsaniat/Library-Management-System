@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, authorize, validate } from '../middleware';
+import { authenticate, authorize } from '../middleware';
 import { UserRole } from '../types';
 import { adminController } from '../controllers';
 

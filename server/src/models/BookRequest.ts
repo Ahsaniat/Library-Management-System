@@ -23,8 +23,7 @@ interface BookRequestAttributes {
   updatedAt?: Date;
 }
 
-interface BookRequestCreationAttributes
-  extends Optional<
+type BookRequestCreationAttributes = Optional<
     BookRequestAttributes,
     | 'id'
     | 'author'
@@ -36,7 +35,7 @@ interface BookRequestCreationAttributes
     | 'processedAt'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class BookRequest
   extends Model<BookRequestAttributes, BookRequestCreationAttributes>

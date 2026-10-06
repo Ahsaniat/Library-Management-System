@@ -20,8 +20,7 @@ interface FineAttributes {
   updatedAt?: Date;
 }
 
-interface FineCreationAttributes
-  extends Optional<
+type FineCreationAttributes = Optional<
     FineAttributes,
     | 'id'
     | 'paidAmount'
@@ -34,7 +33,7 @@ interface FineCreationAttributes
     | 'notes'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class Fine extends Model<FineAttributes, FineCreationAttributes> implements FineAttributes {
   declare id: string;

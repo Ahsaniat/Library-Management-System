@@ -14,8 +14,7 @@ interface AuthorAttributes {
   updatedAt?: Date;
 }
 
-interface AuthorCreationAttributes
-  extends Optional<
+type AuthorCreationAttributes = Optional<
     AuthorAttributes,
     | 'id'
     | 'biography'
@@ -26,7 +25,7 @@ interface AuthorCreationAttributes
     | 'photo'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class Author extends Model<AuthorAttributes, AuthorCreationAttributes> implements AuthorAttributes {
   declare id: string;

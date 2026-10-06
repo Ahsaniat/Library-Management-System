@@ -13,11 +13,10 @@ interface RefreshTokenAttributes {
   updatedAt?: Date;
 }
 
-interface RefreshTokenCreationAttributes
-  extends Optional<
+type RefreshTokenCreationAttributes = Optional<
     RefreshTokenAttributes,
     'id' | 'revokedAt' | 'ipAddress' | 'userAgent' | 'createdAt' | 'updatedAt'
-  > {}
+  >;
 
 class RefreshToken
   extends Model<RefreshTokenAttributes, RefreshTokenCreationAttributes>

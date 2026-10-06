@@ -18,8 +18,7 @@ interface LoanAttributes {
   updatedAt?: Date;
 }
 
-interface LoanCreationAttributes
-  extends Optional<
+type LoanCreationAttributes = Optional<
     LoanAttributes,
     | 'id'
     | 'librarianId'
@@ -31,7 +30,7 @@ interface LoanCreationAttributes
     | 'notes'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class Loan extends Model<LoanAttributes, LoanCreationAttributes> implements LoanAttributes {
   declare id: string;

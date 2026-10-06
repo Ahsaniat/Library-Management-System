@@ -15,8 +15,7 @@ interface AuditLogAttributes {
   createdAt?: Date;
 }
 
-interface AuditLogCreationAttributes
-  extends Optional<
+type AuditLogCreationAttributes = Optional<
     AuditLogAttributes,
     | 'id'
     | 'userId'
@@ -27,7 +26,7 @@ interface AuditLogCreationAttributes
     | 'userAgent'
     | 'requestId'
     | 'createdAt'
-  > {}
+  >;
 
 class AuditLog
   extends Model<AuditLogAttributes, AuditLogCreationAttributes>

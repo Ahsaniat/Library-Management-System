@@ -81,7 +81,7 @@ export default function BookDetail() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--ink-primary)' }}>Book Not Found</h1>
-        <p style={{ color: 'var(--ink-secondary)' }}>The book you're looking for doesn't exist.</p>
+        <p style={{ color: 'var(--ink-secondary)' }}>The book you&apos;re looking for doesn&apos;t exist.</p>
       </div>
     );
   }

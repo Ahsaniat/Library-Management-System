@@ -14,8 +14,7 @@ interface PublisherAttributes {
   updatedAt?: Date;
 }
 
-interface PublisherCreationAttributes
-  extends Optional<
+type PublisherCreationAttributes = Optional<
     PublisherAttributes,
     | 'id'
     | 'address'
@@ -26,7 +25,7 @@ interface PublisherCreationAttributes
     | 'website'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class Publisher
   extends Model<PublisherAttributes, PublisherCreationAttributes>

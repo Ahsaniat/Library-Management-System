@@ -24,8 +24,7 @@ interface UserAttributes {
   updatedAt?: Date;
 }
 
-interface UserCreationAttributes
-  extends Optional<
+type UserCreationAttributes = Optional<
     UserAttributes,
     | 'id'
     | 'role'
@@ -42,7 +41,7 @@ interface UserCreationAttributes
     | 'libraryId'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   declare id: string;

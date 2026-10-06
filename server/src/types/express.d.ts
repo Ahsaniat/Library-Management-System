@@ -1,5 +1,3 @@
-import { Request, Response, NextFunction } from 'express';
-
 export interface UserPayload {
   id: string;
   email: string;

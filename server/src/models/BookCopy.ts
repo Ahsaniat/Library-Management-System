@@ -20,8 +20,7 @@ interface BookCopyAttributes {
   updatedAt?: Date;
 }
 
-interface BookCopyCreationAttributes
-  extends Optional<
+type BookCopyCreationAttributes = Optional<
     BookCopyAttributes,
     | 'id'
     | 'status'
@@ -36,7 +35,7 @@ interface BookCopyCreationAttributes
     | 'notes'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class BookCopy
   extends Model<BookCopyAttributes, BookCopyCreationAttributes>

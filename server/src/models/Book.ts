@@ -1,6 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database';
-import { BookStatus } from '../types';
 
 interface BookAttributes {
   id: string;
@@ -22,8 +21,7 @@ interface BookAttributes {
   updatedAt?: Date;
 }
 
-interface BookCreationAttributes
-  extends Optional<
+type BookCreationAttributes = Optional<
     BookAttributes,
     | 'id'
     | 'subtitle'
@@ -40,7 +38,7 @@ interface BookCreationAttributes
     | 'totalRatings'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class Book extends Model<BookAttributes, BookCreationAttributes> implements BookAttributes {
   declare id: string;

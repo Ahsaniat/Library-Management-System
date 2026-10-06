@@ -20,8 +20,7 @@ interface LibraryAttributes {
   updatedAt?: Date;
 }
 
-interface LibraryCreationAttributes
-  extends Optional<
+type LibraryCreationAttributes = Optional<
     LibraryAttributes,
     | 'id'
     | 'address'
@@ -37,7 +36,7 @@ interface LibraryCreationAttributes
     | 'isActive'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class Library
   extends Model<LibraryAttributes, LibraryCreationAttributes>

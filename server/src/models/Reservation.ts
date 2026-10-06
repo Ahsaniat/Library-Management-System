@@ -17,8 +17,7 @@ interface ReservationAttributes {
   updatedAt?: Date;
 }
 
-interface ReservationCreationAttributes
-  extends Optional<
+type ReservationCreationAttributes = Optional<
     ReservationAttributes,
     | 'id'
     | 'status'
@@ -30,7 +29,7 @@ interface ReservationCreationAttributes
     | 'notes'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class Reservation
   extends Model<ReservationAttributes, ReservationCreationAttributes>

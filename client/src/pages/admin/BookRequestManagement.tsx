@@ -136,7 +136,7 @@ export default function BookRequestManagement() {
                       )}
                       {request.reason && (
                         <p className="text-xs mt-1 italic" style={{ color: 'var(--ink-secondary)' }}>
-                          "{request.reason}"
+                          &quot;{request.reason}&quot;
                         </p>
                       )}
                     </div>

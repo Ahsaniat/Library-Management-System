@@ -16,8 +16,7 @@ interface PaymentAttributes {
   updatedAt?: Date;
 }
 
-interface PaymentCreationAttributes
-  extends Optional<
+type PaymentCreationAttributes = Optional<
     PaymentAttributes,
     | 'id'
     | 'transactionId'
@@ -26,7 +25,7 @@ interface PaymentCreationAttributes
     | 'notes'
     | 'createdAt'
     | 'updatedAt'
-  > {}
+  >;
 
 class Payment
   extends Model<PaymentAttributes, PaymentCreationAttributes>

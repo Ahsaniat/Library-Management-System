@@ -1,6 +1,5 @@
-import { Op, Transaction } from 'sequelize';
+import { Op } from 'sequelize';
 import { Notification, User } from '../models';
-import sequelize from '../config/database';
 import { NotificationType } from '../types';
 import { emailService } from './emailService';
 import logger from '../utils/logger';
@@ -175,7 +174,7 @@ export class NotificationService {
   }
 
   async sendOverdueNotices(): Promise<number> {
-    const { Loan, BookCopy, Book, Fine } = await import('../models');
+    const { Loan, BookCopy, Book } = await import('../models');
     
     const now = new Date();
 

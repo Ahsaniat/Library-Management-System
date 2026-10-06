@@ -6,7 +6,7 @@ import { registerValidator } from '../../src/validators/auth';
 async function runValidator(
   validations: ReturnType<typeof registerValidator>,
   body: Record<string, unknown>
-) {
+): Promise<ReturnType<typeof validationResult>> {
   const req = { body, query: {}, params: {} } as unknown as Request;
   await Promise.all(validations.map((validation) => validation.run(req)));
   return validationResult(req);

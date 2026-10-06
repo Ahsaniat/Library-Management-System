@@ -13,11 +13,10 @@ interface ReviewAttributes {
   updatedAt?: Date;
 }
 
-interface ReviewCreationAttributes
-  extends Optional<
+type ReviewCreationAttributes = Optional<
     ReviewAttributes,
     'id' | 'title' | 'content' | 'isApproved' | 'createdAt' | 'updatedAt'
-  > {}
+  >;
 
 class Review extends Model<ReviewAttributes, ReviewCreationAttributes> implements ReviewAttributes {
   declare id: string;

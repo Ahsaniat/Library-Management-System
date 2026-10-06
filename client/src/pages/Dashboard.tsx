@@ -20,7 +20,7 @@ export default function Dashboard() {
         <h1 className="text-3xl font-bold" style={{ color: 'var(--ink-primary)' }}>
           Welcome back, {user?.firstName}!
         </h1>
-        <p style={{ color: 'var(--ink-secondary)' }} className="mt-2">Here's an overview of your library activity.</p>
+        <p style={{ color: 'var(--ink-secondary)' }} className="mt-2">Here&apos;s an overview of your library activity.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

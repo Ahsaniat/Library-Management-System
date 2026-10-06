@@ -11,8 +11,7 @@ interface WishlistAttributes {
   updatedAt?: Date;
 }
 
-interface WishlistCreationAttributes
-  extends Optional<WishlistAttributes, 'id' | 'notes' | 'priority' | 'createdAt' | 'updatedAt'> {}
+type WishlistCreationAttributes = Optional<WishlistAttributes, 'id' | 'notes' | 'priority' | 'createdAt' | 'updatedAt'>;
 
 class Wishlist
   extends Model<WishlistAttributes, WishlistCreationAttributes>

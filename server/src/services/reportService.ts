@@ -1,7 +1,6 @@
-import { Op, fn, col, literal } from 'sequelize';
-import { User, Book, BookCopy, Loan, Fine, Payment, Category, Author, Library } from '../models';
+import { Op, fn, col } from 'sequelize';
+import { User, Book, BookCopy, Loan, Fine, Payment, Category, Library } from '../models';
 import { LoanStatus, BookStatus, FineStatus } from '../types';
-import logger from '../utils/logger';
 
 interface DateRange {
   startDate: Date;

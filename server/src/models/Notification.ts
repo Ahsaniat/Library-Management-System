@@ -17,11 +17,10 @@ interface NotificationAttributes {
   updatedAt?: Date;
 }
 
-interface NotificationCreationAttributes
-  extends Optional<
+type NotificationCreationAttributes = Optional<
     NotificationAttributes,
     'id' | 'data' | 'isRead' | 'isSent' | 'sentAt' | 'readAt' | 'createdAt' | 'updatedAt'
-  > {}
+  >;
 
 class Notification
   extends Model<NotificationAttributes, NotificationCreationAttributes>

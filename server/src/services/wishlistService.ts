@@ -1,6 +1,4 @@
-import { Op, Transaction } from 'sequelize';
 import { Wishlist, Book, Author, Category } from '../models';
-import sequelize from '../config/database';
 import { NotFoundError, ConflictError } from '../utils/errors';
 import logger from '../utils/logger';
 
