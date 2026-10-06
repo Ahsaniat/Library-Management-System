@@ -196,7 +196,7 @@ export default function BookDetail() {
             {book.averageRating > 0 && (
               <div className="flex items-center gap-1">
                 <span className="font-medium" style={{ color: 'var(--ink-primary)' }}>
-                  {book.averageRating.toFixed(1)} ★
+                  {Number(book.averageRating).toFixed(1)} ★
                 </span>
                 {book.totalRatings > 0 && (
                   <span style={{ color: 'var(--ink-secondary)' }}>({book.totalRatings} reviews)</span>

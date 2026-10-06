@@ -46,7 +46,7 @@ export default function BookCard({ book, className }: BookCardProps) {
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
             <span className="text-sm text-gray-600">
-              {book.averageRating > 0 ? book.averageRating.toFixed(1) : 'N/A'}
+              {Number(book.averageRating) > 0 ? Number(book.averageRating).toFixed(1) : 'N/A'}
             </span>
           </div>
           {book.category && (
