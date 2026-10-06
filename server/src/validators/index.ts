@@ -3,3 +3,7 @@ export * from './book';
 export * from './loan';
 export * from './reservation';
 export * from './setting';
+export * from './admin';
+export * from './bookRequest';
+export * from './wishlist';
+export * from './notification';

@@ -7,6 +7,7 @@ import {
   forgotPasswordValidator,
   resetPasswordValidator,
   changePasswordValidator,
+  updateProfileValidator,
 } from '../validators';
 
 const router = Router();
@@ -65,6 +66,7 @@ router.get(
 router.patch(
   '/profile',
   authenticate,
+  validate(updateProfileValidator),
   authController.updateProfile.bind(authController)
 );
 

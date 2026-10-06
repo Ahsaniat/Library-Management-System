@@ -138,7 +138,7 @@ export class BookRequestService {
       throw new NotFoundError('Pending book request');
     }
 
-    await request.update({ status: BookRequestStatus.REJECTED, adminNotes: 'Cancelled by user' });
+    await request.update({ status: BookRequestStatus.CANCELLED });
 
     logger.info({
       action: 'book_request_cancelled',

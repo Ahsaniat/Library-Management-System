@@ -48,6 +48,13 @@ export const createBookValidator = [
     .optional()
     .isInt({ min: 0, max: 1000 })
     .withMessage('Number of copies must be between 0 and 1000'),
+  body('authorName').optional().trim().isLength({ max: 255 }),
+  body('publisherName').optional().trim().isLength({ max: 255 }),
+  body('categories').optional().isArray({ max: 20 }).withMessage('Invalid categories'),
+  body('categories.*').optional().isString().trim().isLength({ min: 1, max: 100 }),
+  body('coverImage').optional().trim().isLength({ max: 500 }),
+  body('averageRating').optional().isFloat({ min: 0, max: 5 }).toFloat(),
+  body('totalRatings').optional().isInt({ min: 0 }).toInt(),
 ];
 
 export const updateBookValidator = [
@@ -96,6 +103,13 @@ export const updateBookValidator = [
     .optional()
     .isInt({ min: 0, max: 1000 })
     .withMessage('Number of copies must be between 0 and 1000'),
+  body('authorName').optional().trim().isLength({ max: 255 }),
+  body('publisherName').optional().trim().isLength({ max: 255 }),
+  body('categories').optional().isArray({ max: 20 }).withMessage('Invalid categories'),
+  body('categories.*').optional().isString().trim().isLength({ min: 1, max: 100 }),
+  body('coverImage').optional().trim().isLength({ max: 500 }),
+  body('averageRating').optional().isFloat({ min: 0, max: 5 }).toFloat(),
+  body('totalRatings').optional().isInt({ min: 0 }).toInt(),
 ];
 
 export const bookIdValidator = [

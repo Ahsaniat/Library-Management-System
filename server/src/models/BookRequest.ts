@@ -6,6 +6,7 @@ export enum BookRequestStatus {
   APPROVED = 'approved',
   REJECTED = 'rejected',
   ACQUIRED = 'acquired',
+  CANCELLED = 'cancelled',
 }
 
 interface BookRequestAttributes {

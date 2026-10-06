@@ -18,6 +18,10 @@ const copyReferenceValidator = [
   }),
 ];
 
+export const selfCheckoutValidator = [
+  body('bookId').isUUID().withMessage('Valid book ID is required'),
+];
+
 export const checkoutValidator = [
   ...copyReferenceValidator,
   body('userId')

@@ -1,12 +1,19 @@
 import { Router } from 'express';
 import { wishlistController } from '../controllers';
-import { authenticate } from '../middleware';
+import { authenticate, validate } from '../middleware';
+import {
+  addToWishlistValidator,
+  wishlistBookIdValidator,
+  updateWishlistPriorityValidator,
+  updateWishlistNotesValidator,
+} from '../validators';
 
 const router = Router();
 
 router.post(
   '/',
   authenticate,
+  validate(addToWishlistValidator),
   wishlistController.add.bind(wishlistController)
 );
 
@@ -19,24 +26,28 @@ router.get(
 router.get(
   '/check/:bookId',
   authenticate,
+  validate(wishlistBookIdValidator),
   wishlistController.checkInWishlist.bind(wishlistController)
 );
 
 router.delete(
   '/:bookId',
   authenticate,
+  validate(wishlistBookIdValidator),
   wishlistController.remove.bind(wishlistController)
 );
 
 router.patch(
   '/:bookId/priority',
   authenticate,
+  validate(updateWishlistPriorityValidator),
   wishlistController.updatePriority.bind(wishlistController)
 );
 
 router.patch(
   '/:bookId/notes',
   authenticate,
+  validate(updateWishlistNotesValidator),
   wishlistController.updateNotes.bind(wishlistController)
 );
 

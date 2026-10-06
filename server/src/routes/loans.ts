@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { loanController } from '../controllers';
 import { authenticate, authorize, validate } from '../middleware';
 import {
+  selfCheckoutValidator,
   checkoutValidator,
   checkinValidator,
   renewValidator,
@@ -14,6 +15,7 @@ const router = Router();
 router.post(
   '/self-checkout',
   authenticate,
+  validate(selfCheckoutValidator),
   loanController.selfCheckout.bind(loanController)
 );
 

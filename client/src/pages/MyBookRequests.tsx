@@ -59,6 +59,7 @@ export default function MyBookRequests() {
       approved: { bg: 'rgba(34, 197, 94, 0.1)', text: '#22c55e', icon: <CheckCircle className="h-3 w-3" /> },
       rejected: { bg: 'rgba(239, 68, 68, 0.1)', text: '#ef4444', icon: <X className="h-3 w-3" /> },
       acquired: { bg: 'rgba(59, 130, 246, 0.1)', text: '#3b82f6', icon: <Check className="h-3 w-3" /> },
+      cancelled: { bg: 'rgba(107, 114, 128, 0.1)', text: '#6b7280', icon: <X className="h-3 w-3" /> },
     };
     const style = styles[status] || styles.pending;
     return (

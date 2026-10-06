@@ -8,7 +8,7 @@ export interface BookRequest {
   author?: string;
   isbn?: string;
   reason?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'acquired';
+  status: 'pending' | 'approved' | 'rejected' | 'acquired' | 'cancelled';
   adminNotes?: string;
   processedAt?: string;
   createdAt: string;
