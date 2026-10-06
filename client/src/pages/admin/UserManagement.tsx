@@ -32,7 +32,15 @@ function useUsers(params: { page?: number; limit?: number; role?: string; search
   return useQuery({
     queryKey: ['admin', 'users', params],
     queryFn: async () => {
-      const response = await api.get<UsersResponse>('/admin/users', { params });
+      // Omit empty filters so the API does not receive role='' / search=''.
+      const query: Record<string, string | number> = {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+      };
+      if (params.role) query.role = params.role;
+      if (params.search) query.search = params.search;
+
+      const response = await api.get<UsersResponse>('/admin/users', { params: query });
       return response.data.data;
     },
   });
