@@ -62,8 +62,12 @@ export class LoanController {
 
   async checkin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { bookCopyId, barcode, notes } = req.body;
-      const result = await loanService.checkin({ bookCopyId, barcode }, req.user?.id, notes);
+      const { bookCopyId, barcode, notes, condition } = req.body;
+      const result = await loanService.checkin(
+        { bookCopyId, barcode, condition },
+        req.user?.id,
+        notes
+      );
       await auditService.record({
         userId: req.user?.id,
         action: 'loan.checked_in',

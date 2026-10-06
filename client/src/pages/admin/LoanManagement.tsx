@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RotateCcw, Check, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
+import { loanService } from '../../services/loanService';
 import { Button, Input, LoadingSpinner, Pagination } from '../../components';
 import { Loan, PaginationMeta } from '../../types';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 
 interface LoansResponse {
   success: boolean;
@@ -16,6 +18,27 @@ interface LoansResponse {
 interface CheckoutData {
   bookCopyId: string;
   userId: string;
+}
+
+interface UserOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+function useUserSearch(search: string) {
+  return useQuery({
+    queryKey: ['admin', 'user-search', search],
+    queryFn: async (): Promise<UserOption[]> => {
+      const response = await api.get<{ success: boolean; data: { data: UserOption[] } }>(
+        '/admin/users',
+        { params: { search, limit: 10 } }
+      );
+      return response.data.data.data;
+    },
+    enabled: search.trim().length >= 2,
+  });
 }
 
 function useOverdueLoans(page: number) {
@@ -33,10 +56,15 @@ export default function LoanManagement() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({ bookCopyId: '', userId: '' });
+  const [userSearch, setUserSearch] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
   const [checkinBarcode, setCheckinBarcode] = useState('');
+  const [returnCondition, setReturnCondition] = useState<'good' | 'new' | 'fair' | 'poor' | 'damaged'>('good');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const debouncedUserSearch = useDebouncedValue(userSearch);
+  const { data: userOptions } = useUserSearch(debouncedUserSearch);
 
   const { data: overdueData, isLoading, error } = useOverdueLoans(page);
   const overdueLoans = overdueData?.loans ?? [];
@@ -50,6 +78,8 @@ export default function LoanManagement() {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       setShowCheckoutModal(false);
       setCheckoutData({ bookCopyId: '', userId: '' });
+      setSelectedUser(null);
+      setUserSearch('');
       setSuccessMessage('Book checked out successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
     },
@@ -60,14 +90,14 @@ export default function LoanManagement() {
   });
 
   const checkin = useMutation({
-    mutationFn: async (bookCopyId: string) => {
-      await api.post('/loans/checkin', { bookCopyId });
-    },
+    mutationFn: async (bookReference: string) =>
+      loanService.checkin(bookReference, returnCondition),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'loans'] });
       queryClient.invalidateQueries({ queryKey: ['books'] });
       setShowCheckinModal(false);
       setCheckinBarcode('');
+      setReturnCondition('good');
       setSuccessMessage('Book checked in successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
     },
@@ -214,13 +244,58 @@ export default function LoanManagement() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--ink-secondary)' }}>
-                  User ID
+                  Borrower
                 </label>
-                <Input
-                  placeholder="Enter user ID"
-                  value={checkoutData.userId}
-                  onChange={(e) => setCheckoutData({ ...checkoutData, userId: e.target.value })}
-                />
+                {selectedUser ? (
+                  <div
+                    className="flex items-center justify-between px-3 py-2 rounded-lg"
+                    style={{ backgroundColor: 'var(--parchment-dark)' }}
+                  >
+                    <span className="text-sm" style={{ color: 'var(--ink-primary)' }}>
+                      {selectedUser.firstName} {selectedUser.lastName} ({selectedUser.email})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedUser(null)}
+                      aria-label="Clear selected borrower"
+                      className="ml-2 hover:opacity-70"
+                      style={{ color: 'var(--ink-secondary)' }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Input
+                      placeholder="Search by name or email"
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      aria-label="Search borrowers"
+                    />
+                    {userOptions && userOptions.length > 0 && (
+                      <ul
+                        className="mt-1 rounded-lg border max-h-40 overflow-y-auto"
+                        style={{ borderColor: 'var(--parchment-border)', backgroundColor: 'var(--parchment-light)' }}
+                      >
+                        {userOptions.map((option) => (
+                          <li key={option.id}>
+                            <button
+                              type="button"
+                              className="w-full text-left px-3 py-2 text-sm hover:opacity-70"
+                              style={{ color: 'var(--ink-primary)' }}
+                              onClick={() => {
+                                setSelectedUser(option);
+                                setUserSearch('');
+                              }}
+                            >
+                              {option.firstName} {option.lastName} — {option.email}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-6">
@@ -228,8 +303,10 @@ export default function LoanManagement() {
                 Cancel
               </Button>
               <Button
-                onClick={() => checkout.mutate(checkoutData)}
-                disabled={!checkoutData.bookCopyId || !checkoutData.userId}
+                onClick={() =>
+                  checkout.mutate({ bookCopyId: checkoutData.bookCopyId, userId: selectedUser?.id ?? '' })
+                }
+                disabled={!checkoutData.bookCopyId || !selectedUser}
                 isLoading={checkout.isPending}
               >
                 Checkout
@@ -254,6 +331,27 @@ export default function LoanManagement() {
                 value={checkinBarcode}
                 onChange={(e) => setCheckinBarcode(e.target.value)}
               />
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--ink-secondary)' }}>
+                Returned condition
+              </label>
+              <select
+                value={returnCondition}
+                onChange={(e) =>
+                  setReturnCondition(
+                    e.target.value as 'good' | 'new' | 'fair' | 'poor' | 'damaged'
+                  )
+                }
+                className="w-full px-3 py-2 border rounded-lg"
+                style={{ borderColor: 'var(--parchment-border)', backgroundColor: 'var(--parchment-light)' }}
+              >
+                <option value="good">Good</option>
+                <option value="new">New</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor</option>
+                <option value="damaged">Damaged (moves to maintenance)</option>
+              </select>
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <Button variant="outline" onClick={() => setShowCheckinModal(false)}>

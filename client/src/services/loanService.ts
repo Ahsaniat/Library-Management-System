@@ -47,10 +47,13 @@ export const loanService = {
     return response.data.data!.loan;
   },
 
-  async checkin(bookReference: string): Promise<{ loan: Loan; fine?: { amount: number } }> {
+  async checkin(
+    bookReference: string,
+    condition?: 'new' | 'good' | 'fair' | 'poor' | 'damaged'
+  ): Promise<{ loan: Loan; fine?: { amount: number } }> {
     const response = await api.post<
       ApiResponse<{ loan: Loan; fine?: { amount: number } }>
-    >('/loans/checkin', toCopyReference(bookReference));
+    >('/loans/checkin', { ...toCopyReference(bookReference), condition });
     return response.data.data!;
   },
 

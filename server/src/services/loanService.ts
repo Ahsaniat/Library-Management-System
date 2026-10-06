@@ -22,6 +22,7 @@ interface CheckoutData {
 interface CheckinData {
   bookCopyId?: string;
   barcode?: string;
+  condition?: 'new' | 'good' | 'fair' | 'poor' | 'damaged';
 }
 
 interface SelfCheckoutData {
@@ -315,8 +316,15 @@ export class LoanService {
         { transaction: t }
       );
 
+      // A damaged return goes to maintenance instead of back on the shelf.
+      const returnStatus =
+        data.condition === 'damaged' ? BookStatus.MAINTENANCE : BookStatus.AVAILABLE;
+
       await BookCopy.update(
-        { status: BookStatus.AVAILABLE },
+        {
+          status: returnStatus,
+          ...(data.condition && data.condition !== 'damaged' && { condition: data.condition }),
+        },
         { where: { id: bookCopy.id }, transaction: t }
       );
 

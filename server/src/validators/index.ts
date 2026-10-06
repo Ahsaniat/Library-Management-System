@@ -9,3 +9,5 @@ export * from './wishlist';
 export * from './notification';
 export * from './fine';
 export * from './review';
+export * from './copy';
+export * from './library';

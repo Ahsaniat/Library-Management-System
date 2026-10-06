@@ -12,3 +12,5 @@ export { settingService, SettingService } from './settingService';
 export { fineService, FineService } from './fineService';
 export { auditService, AuditService } from './auditService';
 export { reviewService, ReviewService } from './reviewService';
+export { copyService, CopyService } from './copyService';
+export { libraryService, LibraryService } from './libraryService';

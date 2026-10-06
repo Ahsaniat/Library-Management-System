@@ -11,6 +11,8 @@ import wishlistRoutes from './wishlist';
 import settingRoutes from './settings';
 import fineRoutes from './fines';
 import reviewRoutes from './reviews';
+import copyRoutes from './copies';
+import libraryRoutes from './libraries';
 import { ApiResponse } from '../types';
 
 const router = Router();
@@ -39,5 +41,7 @@ router.use('/wishlist', wishlistRoutes);
 router.use('/settings', settingRoutes);
 router.use('/fines', fineRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/book-copies', copyRoutes);
+router.use('/libraries', libraryRoutes);
 
 export default router;
