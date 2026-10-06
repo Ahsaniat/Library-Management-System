@@ -71,7 +71,8 @@ export default function LoanManagement() {
 
   const checkout = useMutation({
     mutationFn: async (data: CheckoutData) => {
-      await api.post('/loans/checkout', data);
+      // Accepts a copy UUID or a barcode from the same scanner field.
+      await loanService.checkout(data.bookCopyId, data.userId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'loans'] });
