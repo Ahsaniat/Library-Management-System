@@ -15,7 +15,9 @@ const router = Router();
 router.get(
   '/users',
   authenticate,
-  authorize(UserRole.ADMIN),
+  // Librarians run the circulation desk and need member lookup; mutations
+  // below remain admin-only.
+  authorize(UserRole.ADMIN, UserRole.LIBRARIAN),
   validate(adminUserSearchValidator),
   adminController.listUsers.bind(adminController)
 );
@@ -31,7 +33,7 @@ router.post(
 router.get(
   '/users/:id',
   authenticate,
-  authorize(UserRole.ADMIN),
+  authorize(UserRole.ADMIN, UserRole.LIBRARIAN),
   validate(userIdValidator),
   adminController.getUser.bind(adminController)
 );
