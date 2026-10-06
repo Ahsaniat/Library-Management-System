@@ -1,4 +1,5 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
+import crypto from 'crypto';
 import config from '../config';
 import { UserRole } from '../types';
 
@@ -11,6 +12,7 @@ export interface TokenPayload {
   email: string;
   role: UserRole;
   tokenVersion: number;
+  jti?: string;
   iat: number;
   exp: number;
 }
@@ -45,11 +47,12 @@ export function signAccessToken(subject: TokenSubject): string {
 }
 
 export function signRefreshToken(subject: TokenSubject): string {
-  return jwt.sign(
-    claimPayload(subject),
-    config.jwt.refreshSecret,
-    signingOptions(config.jwt.refreshExpiresIn)
-  );
+  return jwt.sign(claimPayload(subject), config.jwt.refreshSecret, {
+    ...signingOptions(config.jwt.refreshExpiresIn),
+    // iat has second resolution; without a unique jti two logins in the same
+    // second would produce byte-identical tokens (and colliding hashes).
+    jwtid: crypto.randomUUID(),
+  });
 }
 
 function verify(token: string, secret: string): TokenPayload {

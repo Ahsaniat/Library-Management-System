@@ -16,6 +16,9 @@ export default defineConfig({
     {
       name: 'api',
       testMatch: '**/api/**/*.spec.ts',
+      // Keep API tests in one worker per file so logins are not repeated for
+      // every test (and the auth rate limiter is not tripped).
+      fullyParallel: false,
       use: { baseURL: 'http://localhost:3001/api/v1' },
     },
     {

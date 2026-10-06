@@ -33,6 +33,12 @@ describe('jwt utils', () => {
     expect(payload.tokenVersion).toBe(1);
   });
 
+  it('issues unique refresh tokens even within the same second', () => {
+    const first = signRefreshToken(subject);
+    const second = signRefreshToken(subject);
+    expect(first).not.toBe(second);
+  });
+
   it('does not accept an access token as a refresh token', () => {
     const accessToken = signAccessToken(subject);
     expect(() => verifyRefreshToken(accessToken)).toThrow();

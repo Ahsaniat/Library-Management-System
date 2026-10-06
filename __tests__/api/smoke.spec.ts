@@ -12,12 +12,18 @@ test.describe('API Smoke Tests', () => {
     const memberLogin = await apiContext.post(`${API_BASE}/auth/login`, {
       data: { email: 'member@library.local', password: 'Member123!' },
     });
+    if (!memberLogin.ok()) {
+      throw new Error(`Member login failed (${memberLogin.status()}): ${await memberLogin.text()}`);
+    }
     const memberData = await memberLogin.json();
     memberToken = memberData.data.accessToken;
 
     const adminLogin = await apiContext.post(`${API_BASE}/auth/login`, {
       data: { email: 'admin@library.local', password: 'Admin123!' },
     });
+    if (!adminLogin.ok()) {
+      throw new Error(`Admin login failed (${adminLogin.status()}): ${await adminLogin.text()}`);
+    }
     const adminData = await adminLogin.json();
     adminToken = adminData.data.accessToken;
   });
@@ -69,8 +75,33 @@ test.describe('API Smoke Tests', () => {
     const data = await response.json();
     expect(data.success).toBe(true);
     expect(data.data.accessToken).toBeDefined();
-    expect(data.data.refreshToken).toBeDefined();
     expect(data.data.user.email).toBe('member@library.local');
+
+    // The refresh token is delivered as an HttpOnly cookie, never in the body.
+    const rawCookies = response.headers()['set-cookie'] ?? '';
+    const setCookie = Array.isArray(rawCookies) ? rawCookies.join('; ') : rawCookies;
+    expect(setCookie).toContain('refreshToken=');
+    expect(setCookie.toLowerCase()).toContain('httponly');
+    expect(data.data.refreshToken).toBeUndefined();
+  });
+
+  test('POST /auth/refresh-token - rotates the cookie session', async ({ playwright }) => {
+    const context = await playwright.request.newContext();
+    try {
+      const login = await context.post(`${API_BASE}/auth/login`, {
+        data: { email: 'member@library.local', password: 'Member123!' },
+      });
+      expect(login.ok()).toBeTruthy();
+
+      const refreshed = await context.post(`${API_BASE}/auth/refresh-token`, {});
+      expect(refreshed.ok()).toBeTruthy();
+
+      const body = await refreshed.json();
+      expect(body.data.accessToken).toBeDefined();
+      expect(body.data.user.email).toBe('member@library.local');
+    } finally {
+      await context.dispose();
+    }
   });
 
   test('POST /auth/login - should reject invalid credentials', async ({ request }) => {
