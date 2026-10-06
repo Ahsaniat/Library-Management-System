@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
-import { User } from '../models';
+import { User, Loan } from '../models';
 import { authService } from '../services';
-import { ApiResponse, UserRole } from '../types';
-import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
+import { ApiResponse, UserRole, LoanStatus } from '../types';
+import { NotFoundError, ForbiddenError, ValidationError, ConflictError } from '../utils/errors';
 import { calculatePagination } from '../utils/helpers';
 import logger from '../utils/logger';
 import bcrypt from 'bcryptjs';
@@ -223,6 +223,14 @@ export class AdminController {
       const user = await User.findByPk(userId);
       if (!user) {
         throw new NotFoundError('User');
+      }
+
+      const activeLoans = await Loan.count({
+        where: { userId, status: LoanStatus.ACTIVE },
+      });
+
+      if (activeLoans > 0) {
+        throw new ConflictError('Cannot delete a user with active loans');
       }
 
       await authService.revokeUserSessions(userId);

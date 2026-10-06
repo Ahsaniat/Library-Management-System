@@ -136,6 +136,9 @@ Book.init(
     sequelize,
     modelName: 'Book',
     tableName: 'books',
+    // Books are archived rather than physically removed so loan history and
+    // fine records keep their references.
+    paranoid: true,
     indexes: [
       { fields: ['isbn'], unique: true },
       { fields: ['title'] },

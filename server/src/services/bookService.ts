@@ -1,8 +1,8 @@
 import { Op, WhereOptions, Includeable, Transaction } from 'sequelize';
-import { Book, Author, Category, Publisher, BookCopy, Review } from '../models';
+import { Book, Author, Category, Publisher, BookCopy, Review, Reservation } from '../models';
 import sequelize from '../config/database';
 import { NotFoundError, ConflictError, ValidationError } from '../utils/errors';
-import { PaginationParams, PaginatedResponse, BookStatus } from '../types';
+import { PaginationParams, PaginatedResponse, BookStatus, ReservationStatus } from '../types';
 import { calculatePagination } from '../utils/helpers';
 import logger from '../utils/logger';
 
@@ -169,7 +169,13 @@ export class BookService {
 
   async create(data: CreateBookData): Promise<Book> {
     return sequelize.transaction(async (t: Transaction) => {
-      const existing = await Book.findOne({ where: { isbn: data.isbn }, transaction: t });
+      // Archived books still own their ISBN (unique constraint), so check
+      // including soft-deleted rows for a clean conflict message.
+      const existing = await Book.findOne({
+        where: { isbn: data.isbn },
+        transaction: t,
+        paranoid: false,
+      });
       if (existing) {
         throw new ConflictError('Book with this ISBN already exists');
       }
@@ -270,7 +276,11 @@ export class BookService {
       }
 
       if (data.isbn && data.isbn !== book.isbn) {
-        const existing = await Book.findOne({ where: { isbn: data.isbn }, transaction: t });
+        const existing = await Book.findOne({
+          where: { isbn: data.isbn },
+          transaction: t,
+          paranoid: false,
+        });
         if (existing) {
           throw new ConflictError('Book with this ISBN already exists');
         }
@@ -337,6 +347,17 @@ export class BookService {
 
     if (hasActiveLoans) {
       throw new ConflictError('Cannot delete book with active loans');
+    }
+
+    const activeReservations = await Reservation.count({
+      where: {
+        bookId: id,
+        status: { [Op.in]: [ReservationStatus.PENDING, ReservationStatus.READY] },
+      },
+    });
+
+    if (activeReservations > 0) {
+      throw new ConflictError('Cannot delete a book with active reservations');
     }
 
     await book.destroy();

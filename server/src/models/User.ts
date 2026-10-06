@@ -165,6 +165,8 @@ User.init(
     sequelize,
     modelName: 'User',
     tableName: 'users',
+    // Users are soft-deleted so circulation and financial history stays intact.
+    paranoid: true,
     indexes: [
       { fields: ['email'], unique: true },
       { fields: ['role'] },

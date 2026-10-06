@@ -43,7 +43,12 @@ const REFRESH_TOKEN_TTL_MS = durationToMs(config.jwt.refreshExpiresIn, 7 * 24 * 
 
 export class AuthService {
   async register(data: RegisterData): Promise<User> {
-    const existingUser = await User.findOne({ where: { email: data.email } });
+    // Include soft-deleted accounts so the unique email constraint returns a
+    // clean conflict instead of a database error.
+    const existingUser = await User.findOne({
+      where: { email: data.email },
+      paranoid: false,
+    });
     if (existingUser) {
       throw new ConflictError('Email already registered');
     }
