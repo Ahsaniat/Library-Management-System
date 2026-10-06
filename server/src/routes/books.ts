@@ -58,7 +58,7 @@ router.post(
   bookController.create.bind(bookController)
 );
 
-router.put(
+router.patch(
   '/:id',
   authenticate,
   authorize(UserRole.ADMIN, UserRole.LIBRARIAN),

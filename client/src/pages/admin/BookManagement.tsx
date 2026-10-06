@@ -85,7 +85,7 @@ export default function BookManagement() {
 
   const updateBook = useMutation({
     mutationFn: async ({ bookId, data }: { bookId: string; data: EditBookData }) => {
-      await api.put(`/books/${bookId}`, data);
+      await api.patch(`/books/${bookId}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'books'] });

@@ -5,6 +5,7 @@ import { authService, auditService } from '../services';
 import { ApiResponse, UserRole, LoanStatus } from '../types';
 import { NotFoundError, ForbiddenError, ValidationError, ConflictError } from '../utils/errors';
 import { calculatePagination } from '../utils/helpers';
+import { toUserDto } from '../utils/dto';
 import logger from '../utils/logger';
 import bcrypt from 'bcryptjs';
 
@@ -53,7 +54,11 @@ export class AdminController {
 
       const response: ApiResponse = {
         success: true,
-        data: calculatePagination(rows, count, { page: Number(page), limit: Number(limit) }),
+        data: calculatePagination(
+          rows.map((user) => toUserDto(user)),
+          count,
+          { page: Number(page), limit: Number(limit) }
+        ),
         requestId: req.requestId,
       };
       res.json(response);
@@ -104,17 +109,7 @@ export class AdminController {
       const response: ApiResponse = {
         success: true,
         message: 'User created successfully',
-        data: {
-          user: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            role: user.role,
-            isActive: user.isActive,
-            isEmailVerified: user.isEmailVerified,
-          },
-        },
+        data: { user: toUserDto(user) },
         requestId: req.requestId,
       };
       res.status(201).json(response);
@@ -136,7 +131,7 @@ export class AdminController {
 
       const response: ApiResponse = {
         success: true,
-        data: { user },
+        data: { user: toUserDto(user) },
         requestId: req.requestId,
       };
       res.json(response);
@@ -188,7 +183,7 @@ export class AdminController {
       const response: ApiResponse = {
         success: true,
         message: 'User role updated',
-        data: { user },
+        data: { user: toUserDto(user) },
         requestId: req.requestId,
       };
       res.json(response);
@@ -238,7 +233,7 @@ export class AdminController {
       const response: ApiResponse = {
         success: true,
         message: `User ${isActive ? 'activated' : 'deactivated'}`,
-        data: { user },
+        data: { user: toUserDto(user) },
         requestId: req.requestId,
       };
       res.json(response);

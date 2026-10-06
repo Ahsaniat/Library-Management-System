@@ -51,7 +51,7 @@ export const bookService = {
   },
 
   async update(id: string, data: Partial<Book>): Promise<Book> {
-    const response = await api.put<ApiResponse<{ book: Book }>>(`/books/${id}`, data);
+    const response = await api.patch<ApiResponse<{ book: Book }>>(`/books/${id}`, data);
     return response.data.data!.book;
   },
 

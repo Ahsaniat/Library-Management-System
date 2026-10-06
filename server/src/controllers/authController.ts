@@ -3,6 +3,8 @@ import { authService, auditService } from '../services';
 import { ApiResponse } from '../types';
 import config from '../config';
 import { durationToMs } from '../utils/jwt';
+import { toUserDto } from '../utils/dto';
+import { NotFoundError } from '../utils/errors';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
 const REFRESH_COOKIE_PATH = '/api/v1/auth';
@@ -41,7 +43,7 @@ export class AuthController {
       const response: ApiResponse = {
         success: true,
         message: 'Registration successful. Please verify your email.',
-        data: { user },
+        data: { user: toUserDto(user) },
         requestId: req.requestId,
       };
       res.status(201).json(response);
@@ -71,7 +73,7 @@ export class AuthController {
         success: true,
         message: 'Login successful',
         data: {
-          user: result.user,
+          user: toUserDto(result.user),
           accessToken: result.accessToken,
           ...(wantsBodyRefreshToken(req) && { refreshToken: result.refreshToken }),
         },
@@ -162,7 +164,7 @@ export class AuthController {
       const response: ApiResponse = {
         success: true,
         data: {
-          user: result.user,
+          user: toUserDto(result.user),
           accessToken: result.accessToken,
           ...(wantsBodyRefreshToken(req) && { refreshToken: result.refreshToken }),
         },
@@ -195,9 +197,14 @@ export class AuthController {
     try {
       const { User } = await import('../models');
       const user = await User.findByPk(req.user!.id);
+
+      if (!user) {
+        throw new NotFoundError('User');
+      }
+
       const response: ApiResponse = {
         success: true,
-        data: { user },
+        data: { user: toUserDto(user) },
         requestId: req.requestId,
       };
       res.json(response);
@@ -233,7 +240,7 @@ export class AuthController {
       const response: ApiResponse = {
         success: true,
         message: 'Profile updated successfully',
-        data: { user },
+        data: { user: toUserDto(user) },
         requestId: req.requestId,
       };
       res.json(response);

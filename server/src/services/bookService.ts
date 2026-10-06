@@ -316,7 +316,15 @@ export class BookService {
           await BookCopy.bulkCreate(newCopies, { transaction: t });
         } else if (targetCount < currentCount) {
           const availableCopies = currentCopies.filter(c => c.status === BookStatus.AVAILABLE);
-          const copiesToRemove = availableCopies.slice(0, currentCount - targetCount);
+          const toRemove = currentCount - targetCount;
+
+          if (availableCopies.length < toRemove) {
+            throw new ConflictError(
+              `Cannot remove ${toRemove} copies: only ${availableCopies.length} are available (others are on loan)`
+            );
+          }
+
+          const copiesToRemove = availableCopies.slice(0, toRemove);
           if (copiesToRemove.length > 0) {
             await BookCopy.destroy({
               where: { id: copiesToRemove.map(c => c.id) },

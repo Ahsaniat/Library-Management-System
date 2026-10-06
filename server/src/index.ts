@@ -1,7 +1,6 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import './types/express';
 import config from './config';
@@ -37,10 +36,6 @@ app.use(generalLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-
-if (config.nodeEnv !== 'test') {
-  app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
-}
 
 app.use(requestLogger);
 app.use('/api/v1', routes);
