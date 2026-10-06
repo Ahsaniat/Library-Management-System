@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
 import { User } from '../models';
+import { authService } from '../services';
 import { ApiResponse, UserRole } from '../types';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 import { calculatePagination } from '../utils/helpers';
@@ -188,6 +189,10 @@ export class AdminController {
 
       await user.update({ isActive });
 
+      if (!isActive) {
+        await authService.revokeUserSessions(userId);
+      }
+
       logger.info({
         action: 'user_status_updated',
         adminId: req.user?.id,
@@ -220,6 +225,7 @@ export class AdminController {
         throw new NotFoundError('User');
       }
 
+      await authService.revokeUserSessions(userId);
       await user.destroy();
 
       logger.info({

@@ -14,6 +14,7 @@ interface UserAttributes {
   profilePhoto?: string;
   isActive: boolean;
   isEmailVerified: boolean;
+  tokenVersion: number;
   emailVerificationToken?: string;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
@@ -30,6 +31,7 @@ interface UserCreationAttributes
     | 'role'
     | 'isActive'
     | 'isEmailVerified'
+    | 'tokenVersion'
     | 'phone'
     | 'address'
     | 'profilePhoto'
@@ -54,6 +56,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   declare profilePhoto?: string;
   declare isActive: boolean;
   declare isEmailVerified: boolean;
+  declare tokenVersion: number;
   declare emailVerificationToken?: string;
   declare passwordResetToken?: string;
   declare passwordResetExpires?: Date;
@@ -125,6 +128,11 @@ User.init(
     isEmailVerified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    tokenVersion: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     emailVerificationToken: {
       type: DataTypes.STRING(255),

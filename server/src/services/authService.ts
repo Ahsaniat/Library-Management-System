@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { Op } from 'sequelize';
 import config from '../config';
 import User from '../models/User';
+import RefreshToken from '../models/RefreshToken';
 import { hashPassword, comparePassword } from '../utils/helpers';
 import {
   ValidationError,
@@ -12,6 +12,12 @@ import {
 } from '../utils/errors';
 import { UserRole } from '../types';
 import logger from '../utils/logger';
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  durationToMs,
+} from '../utils/jwt';
 
 interface RegisterData {
   email: string;
@@ -21,11 +27,18 @@ interface RegisterData {
   phone?: string;
 }
 
+export interface TokenMeta {
+  ip?: string;
+  userAgent?: string;
+}
+
 interface LoginResult {
-  user: Omit<User, 'password'>;
+  user: User;
   accessToken: string;
   refreshToken: string;
 }
+
+const REFRESH_TOKEN_TTL_MS = durationToMs(config.jwt.refreshExpiresIn, 7 * 24 * 60 * 60 * 1000);
 
 export class AuthService {
   async register(data: RegisterData): Promise<User> {
@@ -49,11 +62,11 @@ export class AuthService {
       emailVerificationToken: verificationToken,
     });
 
-    logger.info({ action: 'user_registered', userId: user.id, email: user.email });
+    logger.info({ action: 'user_registered', userId: user.id });
     return user;
   }
 
-  async login(email: string, password: string): Promise<LoginResult> {
+  async login(email: string, password: string, meta: TokenMeta = {}): Promise<LoginResult> {
     const user = await User.findOne({ where: { email } });
     if (!user) {
       throw new UnauthorizedError('Invalid credentials');
@@ -70,11 +83,10 @@ export class AuthService {
 
     await user.update({ lastLoginAt: new Date() });
 
-    const accessToken = this.generateAccessToken(user);
-    const refreshToken = this.generateRefreshToken(user);
+    const tokens = await this.issueTokenPair(user, meta);
 
     logger.info({ action: 'user_login', userId: user.id });
-    return { user, accessToken, refreshToken };
+    return { user, ...tokens };
   }
 
   async verifyEmail(token: string): Promise<void> {
@@ -128,6 +140,8 @@ export class AuthService {
       passwordResetExpires: undefined,
     });
 
+    await this.revokeUserSessions(user.id);
+
     logger.info({ action: 'password_reset', userId: user.id });
   }
 
@@ -145,35 +159,105 @@ export class AuthService {
     const hashedPassword = await hashPassword(newPassword);
     await user.update({ password: hashedPassword });
 
+    await this.revokeUserSessions(user.id);
+
     logger.info({ action: 'password_changed', userId: user.id });
   }
 
-  async refreshTokens(userId: string): Promise<{ accessToken: string; refreshToken: string }> {
-    const user = await User.findByPk(userId);
-    if (!user || !user.isActive) {
-      throw new UnauthorizedError('User not found or inactive');
+  /**
+   * Rotates a refresh token: the presented token is revoked and a new pair is
+   * issued. Presenting an already-revoked token is treated as theft, and every
+   * active session for that user is revoked.
+   */
+  async rotateRefreshToken(rawToken: string, meta: TokenMeta = {}): Promise<LoginResult> {
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(rawToken);
+    } catch {
+      throw new UnauthorizedError('Invalid or expired refresh token');
     }
 
-    const accessToken = this.generateAccessToken(user);
-    const refreshToken = this.generateRefreshToken(user);
+    const tokenHash = this.hashToken(rawToken);
+    const stored = await RefreshToken.findOne({ where: { tokenHash } });
+
+    if (!stored) {
+      throw new UnauthorizedError('Invalid refresh token');
+    }
+
+    if (stored.revokedAt) {
+      await this.revokeUserSessions(stored.userId);
+      logger.warn({ action: 'refresh_token_reuse_detected', userId: stored.userId });
+      throw new UnauthorizedError('Refresh token reuse detected; all sessions revoked');
+    }
+
+    if (stored.expiresAt.getTime() <= Date.now()) {
+      await stored.update({ revokedAt: new Date() });
+      throw new UnauthorizedError('Refresh token expired');
+    }
+
+    const user = await User.findByPk(stored.userId);
+    if (!user || !user.isActive || user.tokenVersion !== decoded.tokenVersion) {
+      throw new UnauthorizedError('Session is no longer valid');
+    }
+
+    await stored.update({ revokedAt: new Date() });
+    const tokens = await this.issueTokenPair(user, meta);
+
+    logger.info({ action: 'refresh_token_rotated', userId: user.id });
+    return { user, ...tokens };
+  }
+
+  /** Revokes a single refresh token. Idempotent by design (logout must not fail). */
+  async revokeRefreshToken(rawToken: string): Promise<void> {
+    const tokenHash = this.hashToken(rawToken);
+    const stored = await RefreshToken.findOne({ where: { tokenHash } });
+
+    if (stored && !stored.revokedAt) {
+      await stored.update({ revokedAt: new Date() });
+      logger.info({ action: 'refresh_token_revoked', userId: stored.userId });
+    }
+  }
+
+  /** Revokes every active session for a user and invalidates outstanding access tokens. */
+  async revokeUserSessions(userId: string): Promise<void> {
+    await RefreshToken.update(
+      { revokedAt: new Date() },
+      { where: { userId, revokedAt: null } }
+    );
+
+    const user = await User.findByPk(userId);
+    if (user) {
+      await user.update({ tokenVersion: user.tokenVersion + 1 });
+    }
+  }
+
+  private async issueTokenPair(
+    user: User,
+    meta: TokenMeta
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const subject = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      tokenVersion: user.tokenVersion,
+    };
+
+    const accessToken = signAccessToken(subject);
+    const refreshToken = signRefreshToken(subject);
+
+    await RefreshToken.create({
+      userId: user.id,
+      tokenHash: this.hashToken(refreshToken),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+      ipAddress: meta.ip,
+      userAgent: meta.userAgent,
+    });
 
     return { accessToken, refreshToken };
   }
 
-  private generateAccessToken(user: User): string {
-    return jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn as jwt.SignOptions['expiresIn'] }
-    );
-  }
-
-  private generateRefreshToken(user: User): string {
-    return jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      config.jwt.refreshSecret,
-      { expiresIn: config.jwt.refreshExpiresIn as jwt.SignOptions['expiresIn'] }
-    );
+  private hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
   }
 }
 

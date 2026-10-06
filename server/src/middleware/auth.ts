@@ -1,19 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import config from '../config';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
-import { UserRole } from '../types';
 import User from '../models/User';
+import { verifyAccessToken, TokenPayload } from '../utils/jwt';
 
-interface TokenPayload {
-  id: string;
-  email: string;
-  role: UserRole;
-  iat: number;
-  exp: number;
-}
-
-export function authenticate(req: Request, _res: Response, next: NextFunction): void {
+/**
+ * Verifies the access token and re-checks the account against the database so
+ * that deactivated users and revoked sessions (bumped tokenVersion) are
+ * rejected immediately instead of waiting for the access token to expire.
+ */
+export async function authenticate(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -22,17 +21,31 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
 
   const token = authHeader.substring(7);
 
+  let decoded: TokenPayload;
   try {
-    const decoded = jwt.verify(token, config.jwt.secret) as TokenPayload;
-    req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      role: decoded.role,
-    };
-    next();
+    decoded = verifyAccessToken(token);
   } catch {
     throw new UnauthorizedError('Invalid or expired token');
   }
+
+  const user = await User.findByPk(decoded.id, {
+    attributes: ['id', 'email', 'role', 'isActive', 'tokenVersion'],
+  });
+
+  if (!user || !user.isActive) {
+    throw new UnauthorizedError('Session is no longer valid');
+  }
+
+  if (user.tokenVersion !== decoded.tokenVersion) {
+    throw new UnauthorizedError('Session has been revoked');
+  }
+
+  req.user = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  };
+  next();
 }
 
 export function authorize(...allowedRoles: string[]) {
@@ -49,6 +62,10 @@ export function authorize(...allowedRoles: string[]) {
   };
 }
 
+/**
+ * Public-route personalization only. This remains stateless: it must not be
+ * used to gate access to data (use `authenticate` for that).
+ */
 export async function optionalAuth(
   req: Request,
   _res: Response,
@@ -63,7 +80,7 @@ export async function optionalAuth(
   const token = authHeader.substring(7);
 
   try {
-    const decoded = jwt.verify(token, config.jwt.secret) as TokenPayload;
+    const decoded = verifyAccessToken(token);
     req.user = {
       id: decoded.id,
       email: decoded.email,
@@ -76,32 +93,27 @@ export async function optionalAuth(
   next();
 }
 
-export async function refreshTokens(
-  req: Request,
-  _res: Response,
-  next: NextFunction
-): Promise<void> {
-  const { refreshToken } = req.body as { refreshToken?: string };
+function readRefreshToken(req: Request): string | undefined {
+  const bodyToken = (req.body as { refreshToken?: string } | undefined)?.refreshToken;
+  const cookieToken = (req as Request & { cookies?: Record<string, string> }).cookies
+    ?.refreshToken;
+  return bodyToken || cookieToken;
+}
 
-  if (!refreshToken) {
+/** Requires a refresh token and exposes it to the controller as `req.refreshTokenRaw`. */
+export function requireRefreshToken(req: Request, _res: Response, next: NextFunction): void {
+  const token = readRefreshToken(req);
+
+  if (!token) {
     throw new UnauthorizedError('Refresh token required');
   }
 
-  try {
-    const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret) as TokenPayload;
-    const user = await User.findByPk(decoded.id);
+  req.refreshTokenRaw = token;
+  next();
+}
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedError('User not found or inactive');
-    }
-
-    req.user = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    };
-    next();
-  } catch {
-    throw new UnauthorizedError('Invalid or expired refresh token');
-  }
+/** Attaches a refresh token when present; used by the idempotent logout route. */
+export function optionalRefreshToken(req: Request, _res: Response, next: NextFunction): void {
+  req.refreshTokenRaw = readRefreshToken(req);
+  next();
 }

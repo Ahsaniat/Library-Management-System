@@ -16,6 +16,7 @@ import AuditLog from './AuditLog';
 import Setting from './Setting';
 import BookRequest from './BookRequest';
 import Wishlist from './Wishlist';
+import RefreshToken from './RefreshToken';
 
 Book.belongsTo(Author, { foreignKey: 'authorId', as: 'author' });
 Author.hasMany(Book, { foreignKey: 'authorId', as: 'books' });
@@ -90,6 +91,9 @@ User.hasMany(Wishlist, { foreignKey: 'userId', as: 'wishlistItems' });
 Wishlist.belongsTo(Book, { foreignKey: 'bookId', as: 'book' });
 Book.hasMany(Wishlist, { foreignKey: 'bookId', as: 'wishlistEntries' });
 
+RefreshToken.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(RefreshToken, { foreignKey: 'userId', as: 'refreshTokens' });
+
 export {
   sequelize,
   User,
@@ -109,4 +113,5 @@ export {
   Setting,
   BookRequest,
   Wishlist,
+  RefreshToken,
 };

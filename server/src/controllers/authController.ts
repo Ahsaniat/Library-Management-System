@@ -27,7 +27,10 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
-      const result = await authService.login(email, password);
+      const result = await authService.login(email, password, {
+        ip: req.ip,
+        userAgent: req.get('user-agent'),
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Login successful',
@@ -102,10 +105,29 @@ export class AuthController {
 
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const tokens = await authService.refreshTokens(req.user!.id);
+      const result = await authService.rotateRefreshToken(req.refreshTokenRaw!, {
+        ip: req.ip,
+        userAgent: req.get('user-agent'),
+      });
       const response: ApiResponse = {
         success: true,
-        data: tokens,
+        data: result,
+        requestId: req.requestId,
+      };
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (req.refreshTokenRaw) {
+        await authService.revokeRefreshToken(req.refreshTokenRaw);
+      }
+      const response: ApiResponse = {
+        success: true,
+        message: 'Logged out successfully',
         requestId: req.requestId,
       };
       res.json(response);

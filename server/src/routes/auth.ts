@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authController } from '../controllers';
-import { authenticate, refreshTokens, validate, authLimiter } from '../middleware';
+import { authenticate, requireRefreshToken, optionalRefreshToken, validate, authLimiter } from '../middleware';
 import {
   registerValidator,
   loginValidator,
@@ -46,8 +46,14 @@ router.post(
 
 router.post(
   '/refresh-token',
-  refreshTokens,
+  requireRefreshToken,
   authController.refreshToken.bind(authController)
+);
+
+router.post(
+  '/logout',
+  optionalRefreshToken,
+  authController.logout.bind(authController)
 );
 
 router.get(

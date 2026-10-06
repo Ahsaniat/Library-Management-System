@@ -1,4 +1,10 @@
-export { authenticate, authorize, optionalAuth, refreshTokens } from './auth';
+export {
+  authenticate,
+  authorize,
+  optionalAuth,
+  requireRefreshToken,
+  optionalRefreshToken,
+} from './auth';
 export { errorHandler, notFoundHandler } from './errorHandler';
 export { requestLogger } from './requestLogger';
 export { validate } from './validate';
