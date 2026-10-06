@@ -1,0 +1,15 @@
+{
+  "name": "library-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Library Management System - API and Playwright acceptance tests",
+  "scripts": {
+    "test:api": "playwright test --project=api",
+    "test:e2e": "playwright test --project=e2e",
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "test:all": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
