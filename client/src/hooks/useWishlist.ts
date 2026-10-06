@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { wishlistService } from '../services/wishlistService';
+import { useAuthStore } from '../store';
 
 export function useMyWishlist() {
   return useQuery({
@@ -9,10 +10,12 @@ export function useMyWishlist() {
 }
 
 export function useIsInWishlist(bookId: string) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   return useQuery({
     queryKey: ['wishlist', 'check', bookId],
     queryFn: () => wishlistService.isInWishlist(bookId),
-    enabled: !!bookId,
+    enabled: !!bookId && isAuthenticated,
   });
 }
 

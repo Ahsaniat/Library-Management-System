@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { wishlistController } from '../controllers';
-import { authenticate, validate } from '../middleware';
+import { authenticate, optionalAuth, validate } from '../middleware';
 import {
   addToWishlistValidator,
   wishlistBookIdValidator,
@@ -25,7 +25,7 @@ router.get(
 
 router.get(
   '/check/:bookId',
-  authenticate,
+  optionalAuth,
   validate(wishlistBookIdValidator),
   wishlistController.checkInWishlist.bind(wishlistController)
 );

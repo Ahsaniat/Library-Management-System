@@ -64,6 +64,14 @@ api.interceptors.response.use(
       !originalRequest._retry &&
       !isAuthEndpoint(originalRequest.url)
     ) {
+      // A guest session may trigger optional authenticated calls (for example
+      // wishlist checks on public catalog pages). Those must never bounce the
+      // visitor to the login page.
+      const { user } = useAuthStore.getState();
+      if (!user) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       try {

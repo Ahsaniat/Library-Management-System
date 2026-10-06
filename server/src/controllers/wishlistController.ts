@@ -56,7 +56,11 @@ export class WishlistController {
 
   async checkInWishlist(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const inWishlist = await wishlistService.isInWishlist(req.user!.id, req.params.bookId as string);
+      // Public endpoint: guests always get `false` instead of a 401, so a
+      // catalog page never turns into a login redirect for anonymous users.
+      const inWishlist = req.user
+        ? await wishlistService.isInWishlist(req.user.id, req.params.bookId as string)
+        : false;
 
       const response: ApiResponse = {
         success: true,
