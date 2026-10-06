@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: library_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-library_secure_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -30,9 +30,9 @@ services:
       DB_PORT: 5432
       DB_NAME: library_db
       DB_USER: postgres
-      DB_PASSWORD: ${DB_PASSWORD:-library_secure_password}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
       CORS_ORIGIN: http://localhost
     ports:
       - "3001:3001"

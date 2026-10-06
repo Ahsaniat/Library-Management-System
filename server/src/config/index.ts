@@ -77,6 +77,29 @@ function getEnvVarAsBoolean(key: string, defaultValue: boolean): boolean {
   return value.toLowerCase() === 'true';
 }
 
+const PLACEHOLDER_SECRETS = new Set([
+  'dev-secret-change-in-production',
+  'dev-refresh-secret-change-in-production',
+  'your_jwt_secret_here_min_64_chars',
+  'your_refresh_secret_here_min_64_chars',
+]);
+
+/**
+ * JWT secrets must be present, unique and long enough to resist brute force.
+ * Failing fast at boot is deliberate: a server silently signing tokens with a
+ * public default is an authentication bypass waiting to happen.
+ */
+function getJwtSecret(key: string): string {
+  const value = process.env[key];
+  if (!value || value.length < 64 || PLACEHOLDER_SECRETS.has(value)) {
+    throw new Error(
+      `${key} must be set to a unique secret of at least 64 characters. ` +
+        `Generate one with: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`
+    );
+  }
+  return value;
+}
+
 export const config: Config = {
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
   port: getEnvVarAsNumber('PORT', 3001),
@@ -85,14 +108,14 @@ export const config: Config = {
     port: getEnvVarAsNumber('DB_PORT', 5432),
     name: getEnvVar('DB_NAME', 'library_db'),
     user: getEnvVar('DB_USER', 'postgres'),
-    password: getEnvVar('DB_PASSWORD', ''),
+    password: getEnvVar('DB_PASSWORD'),
     poolMin: getEnvVarAsNumber('DB_POOL_MIN', 2),
     poolMax: getEnvVarAsNumber('DB_POOL_MAX', 10),
   },
   jwt: {
-    secret: getEnvVar('JWT_SECRET', 'dev-secret-change-in-production'),
+    secret: getJwtSecret('JWT_SECRET'),
     expiresIn: getEnvVar('JWT_EXPIRES_IN', '15m'),
-    refreshSecret: getEnvVar('JWT_REFRESH_SECRET', 'dev-refresh-secret-change-in-production'),
+    refreshSecret: getJwtSecret('JWT_REFRESH_SECRET'),
     refreshExpiresIn: getEnvVar('JWT_REFRESH_EXPIRES_IN', '7d'),
   },
   smtp: {
