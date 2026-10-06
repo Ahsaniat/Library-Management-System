@@ -289,7 +289,7 @@ export default function UserManagement() {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="rounded-lg shadow-xl p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'var(--parchment-light)' }}>
             <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--ink-primary)' }}>Add New User</h2>
             <div className="space-y-4">

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, Search, Clock, Users } from 'lucide-react';
 import { usePopularBooks, useRecentBooks } from '../hooks';
 import { BookCard, LoadingSpinner, Button } from '../components';
+import Footer from '../components/Footer';
 
 export default function Home() {
   const { data: popularBooks, isLoading: loadingPopular } = usePopularBooks(4);
@@ -102,6 +103,8 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }

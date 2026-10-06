@@ -328,7 +328,7 @@ export default function BookManagement() {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'var(--parchment-light)' }}>
             <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--ink-primary)' }}>Add New Book</h2>
 
@@ -428,7 +428,7 @@ export default function BookManagement() {
       )}
 
       {showEditModal && editingBook && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'var(--parchment-light)' }}>
             <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--ink-primary)' }}>Edit Book</h2>
 

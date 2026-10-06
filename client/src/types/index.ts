@@ -129,6 +129,7 @@ export interface Loan {
   renewalCount: number;
   maxRenewals: number;
   bookCopy?: BookCopy & { book?: Book };
+  borrower?: Pick<User, 'id' | 'email' | 'firstName' | 'lastName'>;
 }
 
 export interface Reservation {
