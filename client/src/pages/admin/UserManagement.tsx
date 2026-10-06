@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, UserPlus, Edit, Trash2 } from 'lucide-react';
 import api from '../../services/api';
-import { Button, Input, LoadingSpinner } from '../../components';
+import { Button, Input, LoadingSpinner, Alert, ConfirmDialog } from '../../components';
 import { User as UserType, UserRole } from '../../types';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { getApiErrorMessage } from '../../utils';
 
 interface UsersResponse {
   success: boolean;
@@ -38,9 +40,12 @@ function useUsers(params: { page?: number; limit?: number; role?: string; search
 
 export default function UserManagement() {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
   const [roleFilter, setRoleFilter] = useState('');
   const [page, setPage] = useState(1);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<UserType | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUser, setNewUser] = useState<CreateUserData>({
     email: '',
@@ -51,7 +56,7 @@ export default function UserManagement() {
   });
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useUsers({ page, limit: 20, role: roleFilter, search });
+  const { data, isLoading } = useUsers({ page, limit: 20, role: roleFilter, search: debouncedSearch });
 
   const createUser = useMutation({
     mutationFn: async (userData: CreateUserData) => {
@@ -62,8 +67,8 @@ export default function UserManagement() {
       setShowAddModal(false);
       setNewUser({ email: '', password: '', firstName: '', lastName: '', role: UserRole.MEMBER });
     },
-    onError: (error: Error) => {
-      alert(`Failed to create user: ${error.message}`);
+    onError: (error) => {
+      setActionError(getApiErrorMessage(error, 'Failed to create user'));
     },
   });
 
@@ -75,6 +80,9 @@ export default function UserManagement() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       setEditingUser(null);
     },
+    onError: (error) => {
+      setActionError(getApiErrorMessage(error, 'Failed to update role'));
+    },
   });
 
   const toggleStatus = useMutation({
@@ -84,6 +92,9 @@ export default function UserManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
+    onError: (error) => {
+      setActionError(getApiErrorMessage(error, 'Failed to update status'));
+    },
   });
 
   const deleteUser = useMutation({
@@ -92,11 +103,18 @@ export default function UserManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      setPendingDelete(null);
+    },
+    onError: (error) => {
+      setActionError(getApiErrorMessage(error, 'Failed to delete user'));
+      setPendingDelete(null);
     },
   });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {actionError && <Alert variant="error" message={actionError} />}
+
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold" style={{ color: 'var(--ink-primary)' }}>User Management</h1>
@@ -224,17 +242,15 @@ export default function UserManagement() {
                       onClick={() => setEditingUser(editingUser?.id === user.id ? null : user)}
                       className="mr-3 hover:opacity-70"
                       style={{ color: 'var(--accent-warm)' }}
+                      aria-label={`Edit role for ${user.firstName} ${user.lastName}`}
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this user?')) {
-                          deleteUser.mutate(user.id);
-                        }
-                      }}
+                      onClick={() => setPendingDelete(user)}
                       className="hover:opacity-70"
                       style={{ color: 'var(--ink-secondary)' }}
+                      aria-label={`Delete ${user.firstName} ${user.lastName}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -352,6 +368,18 @@ export default function UserManagement() {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Delete user"
+        message={
+          pendingDelete
+            ? `Delete ${pendingDelete.firstName} ${pendingDelete.lastName}? The account is archived and history is kept.`
+            : ''
+        }
+        confirmLabel="Delete"
+        onConfirm={() => pendingDelete && deleteUser.mutate(pendingDelete.id)}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

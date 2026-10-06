@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMyReservations, useCancelReservation } from '../hooks';
-import { LoadingSpinner, Button, Pagination } from '../components';
-import { formatDate } from '../utils';
+import { LoadingSpinner, Button, Pagination, Alert, ConfirmDialog } from '../components';
+import { formatDate, getApiErrorMessage } from '../utils';
 import { Link } from 'react-router-dom';
 
 export default function MyReservations() {
@@ -9,15 +9,17 @@ export default function MyReservations() {
   const { data, isLoading } = useMyReservations(page);
   const reservations = data?.reservations ?? [];
   const cancelReservation = useCancelReservation();
+  const [pendingCancel, setPendingCancel] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleCancel = async (id: string) => {
-    if (!confirm('Are you sure you want to cancel this reservation?')) return;
-
     try {
       await cancelReservation.mutateAsync({ id });
-      alert('Reservation cancelled successfully!');
-    } catch {
-      alert('Failed to cancel reservation. Please try again.');
+      setMessage({ type: 'success', text: 'Reservation cancelled.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: getApiErrorMessage(error, 'Failed to cancel reservation.') });
+    } finally {
+      setPendingCancel(null);
     }
   };
 
@@ -28,6 +30,8 @@ export default function MyReservations() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">My Reservations</h1>
+
+      {message && <Alert variant={message.type} message={message.text} />}
 
       {reservations.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-lg shadow">
@@ -107,7 +111,7 @@ export default function MyReservations() {
                         <Button
                           size="sm"
                           variant="danger"
-                          onClick={() => handleCancel(reservation.id)}
+                          onClick={() => setPendingCancel(reservation.id)}
                           isLoading={cancelReservation.isPending}
                         >
                           Cancel
@@ -125,6 +129,15 @@ export default function MyReservations() {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingCancel)}
+        title="Cancel reservation"
+        message="Cancel this reservation? The next member in the queue will be offered the title."
+        confirmLabel="Cancel reservation"
+        onConfirm={() => pendingCancel && handleCancel(pendingCancel)}
+        onCancel={() => setPendingCancel(null)}
+      />
     </div>
   );
 }

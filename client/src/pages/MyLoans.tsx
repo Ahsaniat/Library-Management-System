@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMyLoans, useRenewLoan } from '../hooks';
-import { LoadingSpinner, Button, Pagination } from '../components';
-import { formatDate, isOverdue, getDaysUntilDue } from '../utils';
+import { LoadingSpinner, Button, Pagination, Alert } from '../components';
+import { formatDate, isOverdue, getDaysUntilDue, getApiErrorMessage } from '../utils';
 import { Link } from 'react-router-dom';
 
 export default function MyLoans() {
@@ -9,13 +9,14 @@ export default function MyLoans() {
   const { data, isLoading } = useMyLoans(undefined, page);
   const loans = data?.loans ?? [];
   const renewLoan = useRenewLoan();
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleRenew = async (loanId: string) => {
     try {
       await renewLoan.mutateAsync(loanId);
-      alert('Loan renewed successfully!');
-    } catch {
-      alert('Failed to renew loan. Please try again.');
+      setMessage({ type: 'success', text: 'Loan renewed successfully.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: getApiErrorMessage(error, 'Failed to renew loan.') });
     }
   };
 
@@ -26,6 +27,8 @@ export default function MyLoans() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">My Loans</h1>
+
+      {message && <Alert variant={message.type} message={message.text} />}
 
       {loans.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-lg shadow">

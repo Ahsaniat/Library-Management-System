@@ -9,3 +9,6 @@ export { default as BookCard } from './BookCard';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as NotificationDropdown } from './NotificationDropdown';
 export { default as Pagination } from './Pagination';
+export { default as Alert } from './Alert';
+export { default as ErrorBoundary } from './ErrorBoundary';
+export { default as ConfirmDialog } from './ConfirmDialog';

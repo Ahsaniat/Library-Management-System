@@ -9,6 +9,15 @@
   --ink-secondary: #5c4f3d;
   --accent-warm: #8b7355;
   --accent-muted: #6b5d4d;
+
+  --status-success: #16a34a;
+  --status-success-bg: rgba(22, 163, 74, 0.1);
+  --status-success-border: rgba(22, 163, 74, 0.3);
+  --status-danger: #dc2626;
+  --status-danger-bg: rgba(220, 38, 38, 0.1);
+  --status-danger-border: rgba(220, 38, 38, 0.3);
+  --status-warning: #ca8a04;
+  --status-info: #2563eb;
 }
 
 body {

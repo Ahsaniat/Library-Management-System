@@ -43,7 +43,9 @@ export default function Footer() {
             <ul className="space-y-2 text-sm opacity-80">
               <li>
                 <a
-                  href="#"
+                  href="https://github.com/Ahsaniat/Library-Management-System"
+                  target="_blank"
+                  rel="noreferrer"
                   className="hover:opacity-100 transition-opacity flex items-center gap-2"
                 >
                   <Github className="h-4 w-4" />
@@ -51,14 +53,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:opacity-100 transition-opacity">
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:opacity-100 transition-opacity">
-                  API Reference
-                </a>
+                <Link to="/books" className="hover:opacity-100 transition-opacity">
+                  Browse Catalog
+                </Link>
               </li>
             </ul>
           </div>

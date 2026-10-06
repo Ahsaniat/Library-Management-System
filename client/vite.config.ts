@@ -21,6 +21,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Generate maps for error tracking but do not ship them to browsers.
+    sourcemap: 'hidden',
   },
 });

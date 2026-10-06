@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Edit, Trash2, BookOpen } from 'lucide-react';
 import api from '../../services/api';
-import { Button, Input, LoadingSpinner } from '../../components';
+import { Button, Input, LoadingSpinner, Alert, ConfirmDialog } from '../../components';
 import { Book } from '../../types';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { getApiErrorMessage } from '../../utils';
 
 interface BooksResponse {
   success: boolean;
@@ -56,10 +58,13 @@ function useAdminBooks(params: { page?: number; limit?: number; q?: string }) {
 
 export default function BookManagement() {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
   const [page, setPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Book | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [editData, setEditData] = useState<EditBookData>({});
   const [isbnLookup, setIsbnLookup] = useState('');
   const [lookupResult, setLookupResult] = useState<OpenLibraryBook | null>(null);
@@ -67,7 +72,7 @@ export default function BookManagement() {
   const [numberOfCopies, setNumberOfCopies] = useState(1);
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useAdminBooks({ page, limit: 20, q: search || undefined });
+  const { data, isLoading } = useAdminBooks({ page, limit: 20, q: debouncedSearch || undefined });
 
   const createBook = useMutation({
     mutationFn: async (bookData: Partial<Book> & { numberOfCopies?: number }) => {
@@ -81,6 +86,7 @@ export default function BookManagement() {
       setIsbnLookup('');
       setNumberOfCopies(1);
     },
+    onError: (error) => setActionError(getApiErrorMessage(error, 'Failed to create book')),
   });
 
   const updateBook = useMutation({
@@ -94,6 +100,7 @@ export default function BookManagement() {
       setEditingBook(null);
       setEditData({});
     },
+    onError: (error) => setActionError(getApiErrorMessage(error, 'Failed to update book')),
   });
 
   const deleteBook = useMutation({
@@ -103,6 +110,11 @@ export default function BookManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'books'] });
       queryClient.invalidateQueries({ queryKey: ['books'] });
+      setPendingDelete(null);
+    },
+    onError: (error) => {
+      setActionError(getApiErrorMessage(error, 'Failed to delete book'));
+      setPendingDelete(null);
     },
   });
 
@@ -116,8 +128,8 @@ export default function BookManagement() {
       if (response.data.success && response.data.data) {
         setLookupResult(response.data.data.book);
       }
-    } catch {
-      alert('Book not found in database or Open Library');
+    } catch (error) {
+      setActionError(getApiErrorMessage(error, 'Book not found in database or Open Library'));
     } finally {
       setLookupLoading(false);
     }
@@ -169,6 +181,8 @@ export default function BookManagement() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {actionError && <Alert variant="error" message={actionError} />}
+
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold" style={{ color: 'var(--ink-primary)' }}>Book Management</h1>
@@ -267,17 +281,15 @@ export default function BookManagement() {
                       onClick={() => handleOpenEdit(book)}
                       className="mr-3 hover:opacity-70"
                       style={{ color: 'var(--accent-warm)' }}
+                      aria-label={`Edit ${book.title}`}
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this book?')) {
-                          deleteBook.mutate(book.id);
-                        }
-                      }}
+                      onClick={() => setPendingDelete(book)}
                       className="hover:opacity-70"
                       style={{ color: 'var(--ink-secondary)' }}
+                      aria-label={`Delete ${book.title}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -504,6 +516,18 @@ export default function BookManagement() {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Delete book"
+        message={
+          pendingDelete
+            ? `Delete "${pendingDelete.title}"? The title is archived and circulation history is kept.`
+            : ''
+        }
+        confirmLabel="Delete"
+        onConfirm={() => pendingDelete && deleteBook.mutate(pendingDelete.id)}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

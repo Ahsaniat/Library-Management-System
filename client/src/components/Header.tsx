@@ -51,6 +51,15 @@ export default function Header() {
                     <Link to="/my-fines" className="hover:opacity-80 transition-opacity">
                       My Fines
                     </Link>
+                    <Link to="/wishlist" className="hover:opacity-80 transition-opacity">
+                      Wishlist
+                    </Link>
+                    <Link to="/book-requests" className="hover:opacity-80 transition-opacity">
+                      Book Requests
+                    </Link>
+                    <Link to="/profile" className="hover:opacity-80 transition-opacity">
+                      Profile
+                    </Link>
                   </>
                 )}
                 {isAdminOrLibrarian && (
@@ -125,10 +134,13 @@ export default function Header() {
                 )}
                 <div className="flex items-center gap-4 ml-4 border-l border-white/30 pl-4">
                   <NotificationDropdown />
-                  <span className="text-sm">{user?.firstName}</span>
+                  <Link to="/profile" className="text-sm hover:opacity-80">
+                    {user?.firstName}
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-1 hover:opacity-80"
+                    aria-label="Log out"
                   >
                     <LogOut className="h-4 w-4" />
                   </button>
@@ -154,7 +166,7 @@ export default function Header() {
           </div>
 
           <div className="md:hidden flex items-center">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle navigation menu">
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
@@ -174,6 +186,9 @@ export default function Header() {
                       <Link to="/my-loans">My Loans</Link>
                       <Link to="/my-reservations">Reservations</Link>
                       <Link to="/my-fines">My Fines</Link>
+                      <Link to="/wishlist">Wishlist</Link>
+                      <Link to="/book-requests">Book Requests</Link>
+                      <Link to="/profile">Profile</Link>
                     </>
                   )}
                   {isAdminOrLibrarian && (

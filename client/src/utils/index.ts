@@ -19,6 +19,22 @@ export function formatLanguage(code?: string): string {
   return LANGUAGE_LABELS[code.toLowerCase()] ?? code;
 }
 
+interface ApiErrorShape {
+  response?: { data?: { error?: string; message?: string } };
+  message?: string;
+}
+
+/** Extracts the API error envelope instead of axios' generic status message. */
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  const apiError = error as ApiErrorShape;
+  return (
+    apiError?.response?.data?.error ??
+    apiError?.response?.data?.message ??
+    apiError?.message ??
+    fallback
+  );
+}
+
 export function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
