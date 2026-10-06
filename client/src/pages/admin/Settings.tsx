@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Save } from 'lucide-react';
 import { Button, Input, LoadingSpinner, Alert } from '../../components';
 import { useSettings, useUpdateSetting } from '../../hooks/useSettings';
 import { Setting } from '../../types';
@@ -117,7 +118,7 @@ export default function Settings() {
                 }
                 aria-label={`Save ${setting.key}`}
               >
-                {savedKey === setting.key ? 'Saved' : 'Save'}
+                {savedKey === setting.key ? 'Saved' : <Save className="h-4 w-4" />}
               </Button>
             </div>
           </div>
