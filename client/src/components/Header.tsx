@@ -15,8 +15,8 @@ export default function Header() {
   const isAdminOrLibrarian = user?.role === UserRole.ADMIN || user?.role === UserRole.LIBRARIAN;
   const isMember = user?.role === UserRole.MEMBER;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 

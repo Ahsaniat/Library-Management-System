@@ -151,5 +151,6 @@ export interface RegisterData {
 export interface AuthResponse {
   user: User;
   accessToken: string;
-  refreshToken: string;
+  /** Only returned to non-browser clients that opt in via a transport header. */
+  refreshToken?: string;
 }

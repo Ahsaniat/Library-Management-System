@@ -9,7 +9,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authService.login(credentials),
     onSuccess: (data) => {
-      setAuth(data.user, data.accessToken, data.refreshToken);
+      setAuth(data.user, data.accessToken);
     },
   });
 }
@@ -34,7 +34,12 @@ export function useLogout() {
   const logout = useAuthStore((state) => state.logout);
   const queryClient = useQueryClient();
 
-  return () => {
+  return async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // The server session is already unusable; clearing local state is enough.
+    }
     logout();
     queryClient.clear();
   };

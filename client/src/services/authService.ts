@@ -29,6 +29,10 @@ export const authService = {
     await api.post('/auth/change-password', { currentPassword, newPassword });
   },
 
+  async logout(): Promise<void> {
+    await api.post('/auth/logout');
+  },
+
   async verifyEmail(token: string): Promise<void> {
     await api.get(`/auth/verify-email/${token}`);
   },

@@ -1,6 +1,32 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, CookieOptions } from 'express';
 import { authService } from '../services';
 import { ApiResponse } from '../types';
+import config from '../config';
+import { durationToMs } from '../utils/jwt';
+
+const REFRESH_COOKIE_NAME = 'refreshToken';
+const REFRESH_COOKIE_PATH = '/api/v1/auth';
+
+function refreshCookieBaseOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    secure: config.nodeEnv === 'production',
+    sameSite: 'strict',
+    path: REFRESH_COOKIE_PATH,
+  };
+}
+
+function refreshCookieOptions(): CookieOptions {
+  return {
+    ...refreshCookieBaseOptions(),
+    maxAge: durationToMs(config.jwt.refreshExpiresIn, 7 * 24 * 60 * 60 * 1000),
+  };
+}
+
+/** Non-browser API clients may opt in to receiving the refresh token in the body. */
+function wantsBodyRefreshToken(req: Request): boolean {
+  return req.get('x-refresh-token-transport') === 'body';
+}
 
 export class AuthController {
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -31,10 +57,15 @@ export class AuthController {
         ip: req.ip,
         userAgent: req.get('user-agent'),
       });
+      res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, refreshCookieOptions());
       const response: ApiResponse = {
         success: true,
         message: 'Login successful',
-        data: result,
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+          ...(wantsBodyRefreshToken(req) && { refreshToken: result.refreshToken }),
+        },
         requestId: req.requestId,
       };
       res.json(response);
@@ -109,9 +140,14 @@ export class AuthController {
         ip: req.ip,
         userAgent: req.get('user-agent'),
       });
+      res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, refreshCookieOptions());
       const response: ApiResponse = {
         success: true,
-        data: result,
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+          ...(wantsBodyRefreshToken(req) && { refreshToken: result.refreshToken }),
+        },
         requestId: req.requestId,
       };
       res.json(response);
@@ -125,6 +161,7 @@ export class AuthController {
       if (req.refreshTokenRaw) {
         await authService.revokeRefreshToken(req.refreshTokenRaw);
       }
+      res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieBaseOptions());
       const response: ApiResponse = {
         success: true,
         message: 'Logged out successfully',

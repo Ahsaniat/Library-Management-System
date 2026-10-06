@@ -8,6 +8,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 api.interceptors.request.use(
@@ -21,37 +22,60 @@ api.interceptors.request.use(
   (error: AxiosError) => Promise.reject(error)
 );
 
+function isAuthEndpoint(url?: string): boolean {
+  if (!url) return false;
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/refresh-token') ||
+    url.includes('/auth/logout')
+  );
+}
+
+/**
+ * Single-flight refresh: concurrent 401 responses share one refresh request,
+ * so a burst of calls cannot rotate the same refresh token twice.
+ */
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post(`${API_BASE_URL}/auth/refresh-token`, {}, { withCredentials: true })
+      .then((response) => response.data.data.accessToken as string)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    const originalRequest = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isAuthEndpoint(originalRequest.url)
+    ) {
       originalRequest._retry = true;
 
-      const { refreshToken, updateTokens, logout } = useAuthStore.getState();
-
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
-            refreshToken,
-          });
-
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-            response.data.data;
-          updateTokens(newAccessToken, newRefreshToken);
-
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return api(originalRequest);
-        } catch {
-          logout();
+      try {
+        const accessToken = await refreshAccessToken();
+        useAuthStore.getState().setAccessToken(accessToken);
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return api(originalRequest);
+      } catch {
+        useAuthStore.getState().logout();
+        if (!window.location.pathname.startsWith('/login')) {
           window.location.href = '/login';
         }
-      } else {
-        logout();
-        window.location.href = '/login';
       }
     }
 
