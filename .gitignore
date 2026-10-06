@@ -66,3 +66,6 @@ secrets/
 
 # Docker
 docker-compose.override.yml
+
+# Local development notes (audit findings and remediation backlog)
+__docs__/audit/
