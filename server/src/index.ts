@@ -19,6 +19,11 @@ import logger from './utils/logger';
 
 const app: Application = express();
 
+if (config.trustProxy !== 'false') {
+  const hops = Number(config.trustProxy);
+  app.set('trust proxy', Number.isFinite(hops) ? hops : config.trustProxy);
+}
+
 app.use(helmet());
 app.use(
   cors({

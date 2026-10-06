@@ -50,6 +50,7 @@ interface Config {
   openLibraryApiUrl: string;
   jobsEnabled: boolean;
   requireEmailVerification: boolean;
+  trustProxy: string;
 }
 
 function getEnvVar(key: string, defaultValue?: string): string {
@@ -150,6 +151,9 @@ export const config: Config = {
     'REQUIRE_EMAIL_VERIFICATION',
     NODE_ENV === 'production'
   ),
+  // Number of trusted reverse-proxy hops ('false' disables). Required for
+  // correct client IPs (and therefore rate limiting) behind nginx.
+  trustProxy: getEnvVar('TRUST_PROXY', '1'),
 };
 
 export default config;
