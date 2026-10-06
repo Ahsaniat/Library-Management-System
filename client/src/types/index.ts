@@ -29,6 +29,21 @@ export enum ReservationStatus {
   EXPIRED = 'expired',
 }
 
+export enum FineStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  WAIVED = 'waived',
+  PARTIAL = 'partial',
+}
+
+export enum NotificationType {
+  DUE_REMINDER = 'due_reminder',
+  OVERDUE_NOTICE = 'overdue_notice',
+  RESERVATION_READY = 'reservation_ready',
+  FINE_NOTICE = 'fine_notice',
+  GENERAL = 'general',
+}
+
 export interface User {
   id: string;
   email: string;
@@ -151,7 +166,7 @@ export interface Fine {
   amount: number;
   paidAmount: number;
   reason: string;
-  status: 'pending' | 'paid' | 'waived' | 'partial';
+  status: FineStatus;
   paidAt?: string;
   waivedAt?: string;
   waiverReason?: string;

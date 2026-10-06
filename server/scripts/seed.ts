@@ -5,6 +5,17 @@ import sequelize from '../src/config/database';
 async function seed() {
   console.log('Starting database seed...');
 
+  if (
+    process.env.NODE_ENV === 'production' &&
+    process.env.ALLOW_DESTRUCTIVE_SEED !== 'true'
+  ) {
+    console.error(
+      'Refusing to run the destructive seed against production. ' +
+        'Set ALLOW_DESTRUCTIVE_SEED=true only if you intend to wipe the database.'
+    );
+    process.exit(1);
+  }
+
   // Models must be registered on the sequelize instance before sync() runs,
   // otherwise sync creates nothing on a fresh database.
   const { User, Author, Publisher, Category, Library, Book, BookCopy } = await import(
@@ -105,7 +116,7 @@ async function seed() {
       title: '1984',
       description: 'A dystopian social science fiction novel and cautionary tale about the dangers of totalitarianism.',
       publishedYear: 1949,
-      language: 'English',
+      language: 'en',
       pageCount: 328,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg',
       authorId: authors[0]!.id,
@@ -117,7 +128,7 @@ async function seed() {
       title: 'Pride and Prejudice',
       description: 'A romantic novel following the character development of Elizabeth Bennet.',
       publishedYear: 1813,
-      language: 'English',
+      language: 'en',
       pageCount: 432,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg',
       authorId: authors[1]!.id,
@@ -129,7 +140,7 @@ async function seed() {
       title: 'The Old Man and the Sea',
       description: 'A short novel about an aging Cuban fisherman and his struggle with a giant marlin.',
       publishedYear: 1952,
-      language: 'English',
+      language: 'en',
       pageCount: 127,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780684801223-L.jpg',
       authorId: authors[2]!.id,
@@ -141,7 +152,7 @@ async function seed() {
       title: 'To the Lighthouse',
       description: 'A landmark novel of high modernism centered on the Ramsay family.',
       publishedYear: 1927,
-      language: 'English',
+      language: 'en',
       pageCount: 209,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780156907392-L.jpg',
       authorId: authors[3]!.id,
@@ -153,7 +164,7 @@ async function seed() {
       title: 'Adventures of Huckleberry Finn',
       description: 'A novel about a young boy and a runaway slave floating down the Mississippi River.',
       publishedYear: 1884,
-      language: 'English',
+      language: 'en',
       pageCount: 366,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780486280615-L.jpg',
       authorId: authors[4]!.id,
@@ -165,7 +176,7 @@ async function seed() {
       title: 'Great Expectations',
       description: 'The story of the orphan Pip, writing his life from his early days.',
       publishedYear: 1861,
-      language: 'English',
+      language: 'en',
       pageCount: 544,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780141439563-L.jpg',
       authorId: authors[5]!.id,
@@ -177,7 +188,7 @@ async function seed() {
       title: 'The Great Gatsby',
       description: 'A novel about the American Dream set in the Jazz Age.',
       publishedYear: 1925,
-      language: 'English',
+      language: 'en',
       pageCount: 180,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg',
       authorId: authors[6]!.id,
@@ -189,7 +200,7 @@ async function seed() {
       title: 'To Kill a Mockingbird',
       description: 'A novel about racial injustice in the American South.',
       publishedYear: 1960,
-      language: 'English',
+      language: 'en',
       pageCount: 336,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780061120084-L.jpg',
       authorId: authors[7]!.id,
@@ -201,7 +212,7 @@ async function seed() {
       title: 'Animal Farm',
       description: 'An allegorical novella reflecting events leading up to the Russian Revolution.',
       publishedYear: 1945,
-      language: 'English',
+      language: 'en',
       pageCount: 112,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780452284234-L.jpg',
       authorId: authors[0]!.id,
@@ -213,7 +224,7 @@ async function seed() {
       title: 'A Tale of Two Cities',
       description: 'A historical novel set in London and Paris before and during the French Revolution.',
       publishedYear: 1859,
-      language: 'English',
+      language: 'en',
       pageCount: 489,
       coverImage: 'https://covers.openlibrary.org/b/isbn/9780141182636-L.jpg',
       authorId: authors[5]!.id,

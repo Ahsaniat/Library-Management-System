@@ -98,7 +98,7 @@ Book.init(
     },
     language: {
       type: DataTypes.STRING(50),
-      defaultValue: 'English',
+      defaultValue: 'en',
     },
     pageCount: {
       type: DataTypes.INTEGER,

@@ -38,27 +38,3 @@ export function useRemoveFromWishlist() {
     },
   });
 }
-
-export function useUpdateWishlistPriority() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ bookId, priority }: { bookId: string; priority: number }) =>
-      wishlistService.updatePriority(bookId, priority),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-    },
-  });
-}
-
-export function useUpdateWishlistNotes() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ bookId, notes }: { bookId: string; notes: string }) =>
-      wishlistService.updateNotes(bookId, notes),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-    },
-  });
-}

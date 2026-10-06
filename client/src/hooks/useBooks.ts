@@ -1,6 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { bookService, BookSearchParams } from '../services/bookService';
-import { Book } from '../types';
 
 export function useBooks(params: BookSearchParams = {}) {
   return useQuery({
@@ -36,40 +35,5 @@ export function useCategories() {
     queryKey: ['books', 'categories'],
     queryFn: () => bookService.getCategories(),
     staleTime: 30 * 60 * 1000,
-  });
-}
-
-export function useCreateBook() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: Partial<Book>) => bookService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['books'] });
-    },
-  });
-}
-
-export function useUpdateBook() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Book> }) =>
-      bookService.update(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['books'] });
-      queryClient.invalidateQueries({ queryKey: ['book', id] });
-    },
-  });
-}
-
-export function useDeleteBook() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => bookService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['books'] });
-    },
   });
 }

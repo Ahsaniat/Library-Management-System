@@ -32,31 +32,6 @@ export function useSelfCheckout() {
   });
 }
 
-export function useCheckout() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ bookCopyId, userId }: { bookCopyId: string; userId: string }) =>
-      loanService.checkout(bookCopyId, userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['loans'] });
-      queryClient.invalidateQueries({ queryKey: ['books'] });
-    },
-  });
-}
-
-export function useCheckin() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (bookCopyId: string) => loanService.checkin(bookCopyId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['loans'] });
-      queryClient.invalidateQueries({ queryKey: ['books'] });
-    },
-  });
-}
-
 export function useOverdueLoans(page = 1) {
   return useQuery({
     queryKey: ['loans', 'overdue', page],

@@ -191,12 +191,12 @@ export default function Books() {
                 style={{ borderColor: 'var(--parchment-border)', backgroundColor: 'var(--parchment-light)' }}
               >
                 <option value="">All Languages</option>
-                <option value="English">English</option>
-                <option value="Spanish">Spanish</option>
-                <option value="French">French</option>
-                <option value="German">German</option>
-                <option value="Chinese">Chinese</option>
-                <option value="Japanese">Japanese</option>
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
               </select>
             </div>
             <div>

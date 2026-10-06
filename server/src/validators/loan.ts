@@ -56,12 +56,6 @@ export const renewValidator = [
     .withMessage('Valid loan ID is required'),
 ];
 
-export const loanIdValidator = [
-  param('id')
-    .isUUID()
-    .withMessage('Invalid loan ID'),
-];
-
 export const loanSearchValidator = [
   query('userId')
     .optional()

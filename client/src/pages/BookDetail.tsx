@@ -5,6 +5,7 @@ import { useBook, useCreateReservation, useSelfCheckout, useAddToWishlist, useRe
 import { LoadingSpinner, Button, Input } from '../components';
 import { useAuthStore } from '../store';
 import { UserRole } from '../types';
+import { formatLanguage } from '../utils';
 
 export default function BookDetail() {
   const { id } = useParams<{ id: string }>();
@@ -230,7 +231,7 @@ export default function BookDetail() {
             {book.language && (
               <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
                 <p className="text-sm" style={{ color: 'var(--ink-secondary)' }}>Language</p>
-                <p className="font-medium capitalize" style={{ color: 'var(--ink-primary)' }}>{book.language}</p>
+                <p className="font-medium" style={{ color: 'var(--ink-primary)' }}>{formatLanguage(book.language)}</p>
               </div>
             )}
             {book.publisher && (
