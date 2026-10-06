@@ -2,7 +2,9 @@ import { Op, Transaction } from 'sequelize';
 import { Reservation, Book, BookCopy, User } from '../models';
 import sequelize from '../config/database';
 import { NotFoundError, ConflictError, ValidationError } from '../utils/errors';
-import { ReservationStatus, BookStatus } from '../types';
+import { ReservationStatus, BookStatus, NotificationType } from '../types';
+import { notificationService } from './notificationService';
+import { settingService } from './settingService';
 import logger from '../utils/logger';
 
 interface CreateReservationData {
@@ -95,6 +97,8 @@ export class ReservationService {
         throw new NotFoundError('Active reservation');
       }
 
+      const wasReady = reservation.status === ReservationStatus.READY;
+
       await reservation.update(
         {
           status: ReservationStatus.CANCELLED,
@@ -104,6 +108,12 @@ export class ReservationService {
       );
 
       await this.reorderQueue(reservation.bookId, reservation.queuePosition, t);
+
+      // Releasing a ready hold must immediately offer the copy to the next
+      // member in the queue.
+      if (wasReady) {
+        await this.promoteNextReservation(reservation.bookId, t);
+      }
 
       logger.info({
         action: 'reservation_cancelled',
@@ -138,33 +148,113 @@ export class ReservationService {
     });
   }
 
+  /**
+   * Promotes the next pending reservation for a title to READY and notifies the
+   * member. Must run inside an existing transaction and takes a row lock so two
+   * concurrent returns cannot promote the same reservation twice.
+   */
+  async promoteNextReservation(bookId: string, t: Transaction): Promise<Reservation | null> {
+    const next = await Reservation.findOne({
+      where: { bookId, status: ReservationStatus.PENDING },
+      order: [['queuePosition', 'ASC']],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!next) {
+      return null;
+    }
+
+    const holdDays = await settingService.getNumber('reservation.holdDays', 3);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + holdDays);
+
+    await next.update(
+      {
+        status: ReservationStatus.READY,
+        expiresAt,
+        notifiedAt: new Date(),
+      },
+      { transaction: t }
+    );
+
+    await this.notifyReservationReady(next, t);
+
+    logger.info({
+      action: 'reservation_ready',
+      reservationId: next.id,
+      bookId,
+      userId: next.userId,
+    });
+
+    return next;
+  }
+
   async processExpiredReservations(): Promise<number> {
-    const now = new Date();
     const expiredReservations = await Reservation.findAll({
       where: {
         status: ReservationStatus.READY,
-        expiresAt: { [Op.lt]: now },
+        expiresAt: { [Op.lt]: new Date() },
       },
     });
 
-    for (const reservation of expiredReservations) {
+    let processed = 0;
+
+    for (const candidate of expiredReservations) {
       await sequelize.transaction(async (t: Transaction) => {
-        await reservation.update(
-          { status: ReservationStatus.EXPIRED },
-          { transaction: t }
-        );
+        const reservation = await Reservation.findByPk(candidate.id, {
+          transaction: t,
+          lock: t.LOCK.UPDATE,
+        });
+
+        if (
+          !reservation ||
+          reservation.status !== ReservationStatus.READY ||
+          !reservation.expiresAt ||
+          reservation.expiresAt.getTime() >= Date.now()
+        ) {
+          return;
+        }
+
+        await reservation.update({ status: ReservationStatus.EXPIRED }, { transaction: t });
         await this.reorderQueue(reservation.bookId, reservation.queuePosition, t);
+        // A lapsed hold must not stall the queue: the next member is offered
+        // the title immediately.
+        await this.promoteNextReservation(reservation.bookId, t);
+        processed++;
       });
     }
 
-    if (expiredReservations.length > 0) {
-      logger.info({
-        action: 'expired_reservations_processed',
-        count: expiredReservations.length,
-      });
+    if (processed > 0) {
+      logger.info({ action: 'expired_reservations_processed', count: processed });
     }
 
-    return expiredReservations.length;
+    return processed;
+  }
+
+  private async notifyReservationReady(reservation: Reservation, t: Transaction): Promise<void> {
+    const [user, book] = await Promise.all([
+      User.findByPk(reservation.userId, { transaction: t }),
+      Book.findByPk(reservation.bookId, { transaction: t }),
+    ]);
+
+    if (!user || !book) {
+      return;
+    }
+
+    await notificationService.createAndSend({
+      userId: user.id,
+      type: NotificationType.RESERVATION_READY,
+      title: 'Reservation ready for pickup',
+      message: `"${book.title}" is ready for pickup. Please collect it before the hold expires.`,
+      email: user.email,
+      firstName: user.firstName,
+      data: {
+        bookTitle: book.title,
+        expiresAt: reservation.expiresAt?.toISOString(),
+        reservationId: reservation.id,
+      },
+    });
   }
 
   private async reorderQueue(

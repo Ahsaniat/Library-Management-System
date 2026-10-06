@@ -11,6 +11,11 @@ export const checkoutValidator = [
     .optional()
     .isISO8601()
     .withMessage('Invalid due date format'),
+  body('overrideHold')
+    .optional()
+    .isBoolean()
+    .toBoolean()
+    .withMessage('overrideHold must be a boolean'),
 ];
 
 export const checkinValidator = [

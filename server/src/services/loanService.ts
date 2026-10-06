@@ -5,6 +5,7 @@ import { NotFoundError, ConflictError, ValidationError } from '../utils/errors';
 import { LoanStatus, BookStatus, ReservationStatus } from '../types';
 import { calculateDueDate, calculateFine } from '../utils/helpers';
 import { settingService } from './settingService';
+import { reservationService } from './reservationService';
 import logger from '../utils/logger';
 
 interface CheckoutData {
@@ -13,6 +14,7 @@ interface CheckoutData {
   librarianId?: string;
   dueDate?: Date;
   isSelfCheckout?: boolean;
+  overrideHold?: boolean;
 }
 
 interface SelfCheckoutData {
@@ -49,6 +51,21 @@ export class LoanService {
 
       if (!lockedCopy || lockedCopy.status !== BookStatus.AVAILABLE) {
         throw new ConflictError('Book copy is no longer available');
+      }
+
+      const readyHold = await Reservation.findOne({
+        where: {
+          bookId: data.bookId,
+          status: ReservationStatus.READY,
+          expiresAt: { [Op.gt]: new Date() },
+        },
+        order: [['queuePosition', 'ASC']],
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (readyHold && readyHold.userId !== data.userId) {
+        throw new ConflictError('This title is on hold for another member');
       }
 
       const user = await User.findByPk(data.userId, { transaction: t });
@@ -152,6 +169,33 @@ export class LoanService {
 
       if (bookCopy.status !== BookStatus.AVAILABLE) {
         throw new ConflictError(`Book is not available (status: ${bookCopy.status})`);
+      }
+
+      const readyHold = await Reservation.findOne({
+        where: {
+          bookId: bookCopy.bookId,
+          status: ReservationStatus.READY,
+          expiresAt: { [Op.gt]: new Date() },
+        },
+        order: [['queuePosition', 'ASC']],
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (readyHold && readyHold.userId !== data.userId && !data.overrideHold) {
+        throw new ConflictError(
+          'This title is on hold for another member; pass overrideHold to force checkout'
+        );
+      }
+
+      const duplicateLoan = await Loan.findOne({
+        where: { userId: data.userId, status: LoanStatus.ACTIVE },
+        include: [{ model: BookCopy, as: 'bookCopy', where: { bookId: bookCopy.bookId } }],
+        transaction: t,
+      });
+
+      if (duplicateLoan) {
+        throw new ConflictError('User already has an active loan for this title');
       }
 
       const user = await User.findByPk(data.userId, { transaction: t });
@@ -272,7 +316,7 @@ export class LoanService {
       }
 
       const bookCopy = loan.get('bookCopy') as BookCopy;
-      await this.processNextReservation(bookCopy.bookId, t);
+      await reservationService.promoteNextReservation(bookCopy.bookId, t);
 
       logger.info({
         action: 'book_checkin',
@@ -368,34 +412,6 @@ export class LoanService {
       ],
       order: [['borrowedAt', 'DESC']],
     });
-  }
-
-  private async processNextReservation(bookId: string, t: Transaction): Promise<void> {
-    const nextReservation = await Reservation.findOne({
-      where: { bookId, status: ReservationStatus.PENDING },
-      order: [['queuePosition', 'ASC']],
-      transaction: t,
-    });
-
-    if (nextReservation) {
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 3);
-
-      await nextReservation.update(
-        {
-          status: ReservationStatus.READY,
-          expiresAt,
-          notifiedAt: new Date(),
-        },
-        { transaction: t }
-      );
-
-      logger.info({
-        action: 'reservation_ready',
-        reservationId: nextReservation.id,
-        userId: nextReservation.userId,
-      });
-    }
   }
 }
 
