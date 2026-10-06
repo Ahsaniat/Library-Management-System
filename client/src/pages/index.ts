@@ -13,3 +13,4 @@ export { default as MyBookRequests } from './MyBookRequests';
 export { default as ForgotPassword } from './ForgotPassword';
 export { default as ResetPassword } from './ResetPassword';
 export { default as VerifyEmail } from './VerifyEmail';
+export { default as MyFines } from './MyFines';

@@ -8,3 +8,4 @@ export { adminController, AdminController } from './adminController';
 export { bookRequestController, BookRequestController } from './bookRequestController';
 export { wishlistController, WishlistController } from './wishlistController';
 export { settingController, SettingController } from './settingController';
+export { fineController, FineController } from './fineController';

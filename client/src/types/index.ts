@@ -124,6 +124,35 @@ export interface Setting {
   isPublic: boolean;
 }
 
+export interface Payment {
+  id: string;
+  amount: number;
+  paymentMethod: 'cash' | 'card' | 'online' | 'other';
+  receiptNumber: string;
+  paidAt: string;
+}
+
+export interface Fine {
+  id: string;
+  loanId: string;
+  userId: string;
+  amount: number;
+  paidAmount: number;
+  reason: string;
+  status: 'pending' | 'paid' | 'waived' | 'partial';
+  paidAt?: string;
+  waivedAt?: string;
+  waiverReason?: string;
+  createdAt: string;
+  payments?: Payment[];
+  loan?: {
+    id: string;
+    dueDate: string;
+    bookCopy?: { id: string; barcode: string; book?: { id: string; title: string } };
+  };
+  user?: Pick<User, 'id' | 'email' | 'firstName' | 'lastName'>;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;

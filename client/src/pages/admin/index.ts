@@ -5,3 +5,4 @@ export { default as LoanManagement } from './LoanManagement';
 export { default as Reports } from './Reports';
 export { default as BookRequestManagement } from './BookRequestManagement';
 export { default as Settings } from './Settings';
+export { default as FineManagement } from './FineManagement';

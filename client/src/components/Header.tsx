@@ -48,6 +48,9 @@ export default function Header() {
                     <Link to="/my-reservations" className="hover:opacity-80 transition-opacity">
                       Reservations
                     </Link>
+                    <Link to="/my-fines" className="hover:opacity-80 transition-opacity">
+                      My Fines
+                    </Link>
                   </>
                 )}
                 {isAdminOrLibrarian && (
@@ -86,6 +89,13 @@ export default function Header() {
                         style={{ color: 'var(--ink-primary)' }}
                       >
                         Loan Management
+                      </Link>
+                      <Link
+                        to="/admin/fines"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                        style={{ color: 'var(--ink-primary)' }}
+                      >
+                        Fines
                       </Link>
                       <Link
                         to="/admin/reports"
@@ -163,6 +173,7 @@ export default function Header() {
                     <>
                       <Link to="/my-loans">My Loans</Link>
                       <Link to="/my-reservations">Reservations</Link>
+                      <Link to="/my-fines">My Fines</Link>
                     </>
                   )}
                   {isAdminOrLibrarian && (
@@ -176,6 +187,7 @@ export default function Header() {
                       )}
                       <Link to="/admin/books">Book Management</Link>
                       <Link to="/admin/loans">Loan Management</Link>
+                      <Link to="/admin/fines">Fines</Link>
                       <Link to="/admin/reports">Reports</Link>
                       <Link to="/admin/book-requests">Book Requests</Link>
                       {user?.role === UserRole.ADMIN && (

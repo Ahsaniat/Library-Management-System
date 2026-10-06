@@ -9,3 +9,4 @@ export { reportService, ReportService } from './reportService';
 export { bookRequestService, BookRequestService } from './bookRequestService';
 export { wishlistService, WishlistService } from './wishlistService';
 export { settingService, SettingService } from './settingService';
+export { fineService, FineService } from './fineService';

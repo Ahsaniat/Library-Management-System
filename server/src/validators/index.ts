@@ -7,3 +7,4 @@ export * from './admin';
 export * from './bookRequest';
 export * from './wishlist';
 export * from './notification';
+export * from './fine';

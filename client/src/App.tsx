@@ -15,9 +15,10 @@ import MyBookRequests from './pages/MyBookRequests';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
+import MyFines from './pages/MyFines';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
-import { AdminDashboard, UserManagement, BookManagement, LoanManagement, Reports, BookRequestManagement, Settings } from './pages/admin';
+import { AdminDashboard, UserManagement, BookManagement, LoanManagement, Reports, BookRequestManagement, Settings, FineManagement } from './pages/admin';
 import { UserRole } from './types';
 
 function App() {
@@ -45,6 +46,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MyLoans />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="my-fines"
+          element={
+            <ProtectedRoute>
+              <MyFines />
             </ProtectedRoute>
           }
         />
@@ -133,6 +142,14 @@ function App() {
           element={
             <RoleProtectedRoute allowedRoles={[UserRole.ADMIN]}>
               <Settings />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/fines"
+          element={
+            <RoleProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.LIBRARIAN]}>
+              <FineManagement />
             </RoleProtectedRoute>
           }
         />

@@ -6,6 +6,7 @@ import { LoanStatus, BookStatus, ReservationStatus } from '../types';
 import { calculateDueDate, calculateFine } from '../utils/helpers';
 import { settingService } from './settingService';
 import { reservationService } from './reservationService';
+import { fineService } from './fineService';
 import logger from '../utils/logger';
 
 interface CheckoutData {
@@ -86,12 +87,8 @@ export class LoanService {
         throw new NotFoundError('User');
       }
 
-      const activeFines = await Fine.count({
-        where: { userId: data.userId, status: 'pending' },
-        transaction: t,
-      });
-
-      if (activeFines > 0) {
+      const hasFines = await fineService.hasOutstandingFines(data.userId);
+      if (hasFines) {
         throw new ValidationError('You have unpaid fines. Please clear them before borrowing.');
       }
 
@@ -223,12 +220,8 @@ export class LoanService {
         throw new NotFoundError('User');
       }
 
-      const activeFines = await Fine.count({
-        where: { userId: data.userId, status: 'pending' },
-        transaction: t,
-      });
-
-      if (activeFines > 0) {
+      const hasFines = await fineService.hasOutstandingFines(data.userId);
+      if (hasFines) {
         throw new ValidationError('User has unpaid fines');
       }
 
