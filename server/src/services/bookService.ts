@@ -1,11 +1,12 @@
 import { Op, WhereOptions, Includeable, Transaction } from 'sequelize';
 import { Book, Author, Category, Publisher, BookCopy, Review } from '../models';
 import sequelize from '../config/database';
-import { NotFoundError, ConflictError } from '../utils/errors';
+import { NotFoundError, ConflictError, ValidationError } from '../utils/errors';
 import { PaginationParams, PaginatedResponse, BookStatus } from '../types';
 import { calculatePagination } from '../utils/helpers';
 import logger from '../utils/logger';
-import { v4 as uuidv4 } from 'uuid';
+
+const MAX_COPIES_PER_REQUEST = 1000;
 
 interface BookSearchParams extends PaginationParams {
   q?: string;
@@ -239,7 +240,7 @@ export class BookService {
 
       const book = await Book.create(bookData, { transaction: t });
 
-      const numberOfCopies = data.numberOfCopies ?? 1;
+      const numberOfCopies = Math.min(data.numberOfCopies ?? 1, MAX_COPIES_PER_REQUEST);
       if (numberOfCopies > 0) {
         const copies = [];
         for (let i = 0; i < numberOfCopies; i++) {
@@ -281,16 +282,23 @@ export class BookService {
       await book.update(updateData, { transaction: t });
 
       if (typeof data.numberOfCopies === 'number') {
+        if (data.numberOfCopies > MAX_COPIES_PER_REQUEST) {
+          throw new ValidationError(
+            `A book cannot have more than ${MAX_COPIES_PER_REQUEST} copies`
+          );
+        }
+
         const currentCopies = (book as Book & { copies?: BookCopy[] }).copies ?? [];
         const currentCount = currentCopies.length;
         const targetCount = data.numberOfCopies;
 
         if (targetCount > currentCount) {
+          const nextSequence = await this.nextBarcodeSequence(book.id, t);
           const newCopies = [];
-          for (let i = currentCount; i < targetCount; i++) {
+          for (let i = 0; i < targetCount - currentCount; i++) {
             newCopies.push({
               bookId: book.id,
-              barcode: `${book.isbn}-${String(i + 1).padStart(3, '0')}-${uuidv4().slice(0, 4)}`,
+              barcode: `${book.isbn}-${String(nextSequence + i).padStart(3, '0')}`,
               status: BookStatus.AVAILABLE,
               condition: 'good' as const,
             });
@@ -375,6 +383,27 @@ export class BookService {
       { averageRating: parseFloat(averageRating.toFixed(2)), totalRatings },
       { where: { id: bookId } }
     );
+  }
+
+  /** Continues the ISBN-based copy sequence instead of random suffixes. */
+  private async nextBarcodeSequence(bookId: string, t: Transaction): Promise<number> {
+    const copies = await BookCopy.findAll({
+      where: { bookId },
+      attributes: ['barcode'],
+      transaction: t,
+    });
+
+    let highest = 0;
+    for (const copy of copies) {
+      const standard = /-(\d{3})$/.exec(copy.barcode);
+      const legacy = /-(\d{3})-[0-9a-f]{4}$/i.exec(copy.barcode);
+      const value = standard?.[1] ?? legacy?.[1];
+      if (value) {
+        highest = Math.max(highest, parseInt(value, 10));
+      }
+    }
+
+    return highest + 1;
   }
 }
 

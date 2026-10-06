@@ -71,6 +71,15 @@ describe('createBookValidator', () => {
     });
     expect(result.isEmpty()).toBe(false);
   });
+
+  it('rejects an unbounded copy count', async () => {
+    const result = await runValidator(createBookValidator, {
+      isbn: '9780451524935',
+      title: '1984',
+      numberOfCopies: '5000000',
+    });
+    expect(result.isEmpty()).toBe(false);
+  });
 });
 
 describe('checkoutValidator', () => {

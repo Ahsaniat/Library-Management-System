@@ -46,7 +46,7 @@ export function sanitizeString(input: string): string {
 
 export function generateBarcode(): string {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
+  const random = crypto.randomBytes(4).toString('hex');
   return `LIB-${timestamp}-${random}`.toUpperCase();
 }
 
