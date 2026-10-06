@@ -7,3 +7,4 @@ export { useMyBookRequests, useAllBookRequests, useCreateBookRequest, useCancelB
 export { useMyWishlist, useIsInWishlist, useAddToWishlist, useRemoveFromWishlist, useUpdateWishlistPriority, useUpdateWishlistNotes } from './useWishlist';
 export { useSettings, useUpdateSetting } from './useSettings';
 export { useMyFines, useMyFineSummary, useAllFines, usePayFine, useWaiveFine } from './useFines';
+export { useBookReviews, useCreateReview, useDeleteReview } from './useReviews';

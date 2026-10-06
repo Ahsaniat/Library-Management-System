@@ -1,11 +1,13 @@
 import { Router } from 'express';
-import { bookController } from '../controllers';
+import { bookController, reviewController } from '../controllers';
 import { authenticate, authorize, validate, optionalAuth } from '../middleware';
 import {
   createBookValidator,
   updateBookValidator,
   bookIdValidator,
   bookSearchValidator,
+  createReviewValidator,
+  reviewSearchValidator,
 } from '../validators';
 import { UserRole } from '../types';
 
@@ -41,6 +43,19 @@ router.get(
 router.get(
   '/categories',
   bookController.getCategories.bind(bookController)
+);
+
+router.get(
+  '/:id/reviews',
+  validate(reviewSearchValidator),
+  reviewController.listByBook.bind(reviewController)
+);
+
+router.post(
+  '/:id/reviews',
+  authenticate,
+  validate(createReviewValidator),
+  reviewController.create.bind(reviewController)
 );
 
 router.get(

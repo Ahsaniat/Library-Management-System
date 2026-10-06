@@ -79,7 +79,19 @@ export interface Book {
   category?: Category;
   publisher?: Publisher;
   copies?: BookCopy[];
+  reviews?: Review[];
   createdAt: string;
+}
+
+export interface Review {
+  id: string;
+  bookId: string;
+  userId: string;
+  rating: number;
+  title?: string;
+  content?: string;
+  createdAt: string;
+  user?: { id: string; firstName: string; lastName: string };
 }
 
 export interface BookCopy {

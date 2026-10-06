@@ -10,6 +10,7 @@ import bookRequestRoutes from './bookRequests';
 import wishlistRoutes from './wishlist';
 import settingRoutes from './settings';
 import fineRoutes from './fines';
+import reviewRoutes from './reviews';
 import { ApiResponse } from '../types';
 
 const router = Router();
@@ -37,5 +38,6 @@ router.use('/book-requests', bookRequestRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/settings', settingRoutes);
 router.use('/fines', fineRoutes);
+router.use('/reviews', reviewRoutes);
 
 export default router;

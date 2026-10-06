@@ -9,3 +9,4 @@ export { bookRequestController, BookRequestController } from './bookRequestContr
 export { wishlistController, WishlistController } from './wishlistController';
 export { settingController, SettingController } from './settingController';
 export { fineController, FineController } from './fineController';
+export { reviewController, ReviewController } from './reviewController';

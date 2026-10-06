@@ -1,5 +1,5 @@
 import { Op, WhereOptions, Includeable, Transaction } from 'sequelize';
-import { Book, Author, Category, Publisher, BookCopy, Review, Reservation } from '../models';
+import { Book, Author, Category, Publisher, BookCopy, Review, Reservation, User } from '../models';
 import sequelize from '../config/database';
 import { NotFoundError, ConflictError, ValidationError } from '../utils/errors';
 import { PaginationParams, PaginatedResponse, BookStatus, ReservationStatus } from '../types';
@@ -146,6 +146,9 @@ export class BookService {
           as: 'reviews',
           limit: 10,
           order: [['createdAt', 'DESC']],
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName'] },
+          ],
         },
       ],
     });

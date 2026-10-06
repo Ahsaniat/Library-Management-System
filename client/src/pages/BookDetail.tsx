@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Heart, HeartOff, BookOpen, Clock, Check, AlertCircle } from 'lucide-react';
-import { useBook, useCreateReservation, useSelfCheckout, useAddToWishlist, useRemoveFromWishlist, useIsInWishlist } from '../hooks';
-import { LoadingSpinner, Button } from '../components';
+import { Heart, HeartOff, BookOpen, Clock, Check, AlertCircle, Star, Trash2 } from 'lucide-react';
+import { useBook, useCreateReservation, useSelfCheckout, useAddToWishlist, useRemoveFromWishlist, useIsInWishlist, useCreateReview, useDeleteReview } from '../hooks';
+import { LoadingSpinner, Button, Input } from '../components';
 import { useAuthStore } from '../store';
 import { UserRole } from '../types';
 
@@ -17,6 +17,11 @@ export default function BookDetail() {
   const { isAuthenticated, user } = useAuthStore();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [rating, setRating] = useState(5);
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [reviewContent, setReviewContent] = useState('');
+  const createReview = useCreateReview(id ?? '');
+  const deleteReview = useDeleteReview(id ?? '');
 
   const availableCopies = book?.copies?.filter((c) => c.status === 'available').length ?? 0;
   const totalCopies = book?.copies?.length ?? 0;
@@ -69,6 +74,37 @@ export default function BookDetail() {
       refetchWishlist();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to update wishlist.';
+      setErrorMessage(message);
+    }
+  };
+
+  const handleReviewSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!book) return;
+    try {
+      await createReview.mutateAsync({
+        rating,
+        title: reviewTitle || undefined,
+        content: reviewContent || undefined,
+      });
+      setSuccessMessage('Review submitted. Thank you!');
+      setReviewTitle('');
+      setReviewContent('');
+      setRating(5);
+      refetch();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to submit review.';
+      setErrorMessage(message);
+    }
+  };
+
+  const handleReviewDelete = async (reviewId: string) => {
+    try {
+      await deleteReview.mutateAsync(reviewId);
+      setSuccessMessage('Review deleted.');
+      refetch();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to delete review.';
       setErrorMessage(message);
     }
   };
@@ -213,6 +249,114 @@ export default function BookDetail() {
               </p>
             </div>
           )}
+
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--ink-primary)' }}>
+              Reviews {book.totalRatings > 0 && `(${book.totalRatings})`}
+            </h2>
+
+            {isAuthenticated && isMember && (
+              <form
+                onSubmit={handleReviewSubmit}
+                className="mb-4 p-4 rounded-lg space-y-3"
+                style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}
+              >
+                <div className="flex items-center gap-3">
+                  <label htmlFor="review-rating" className="text-sm" style={{ color: 'var(--ink-secondary)' }}>
+                    Rating
+                  </label>
+                  <select
+                    id="review-rating"
+                    value={rating}
+                    onChange={(event) => setRating(Number(event.target.value))}
+                    className="px-3 py-1 border rounded"
+                    style={{ borderColor: 'var(--parchment-border)' }}
+                  >
+                    {[5, 4, 3, 2, 1].map((value) => (
+                      <option key={value} value={value}>
+                        {value} star{value > 1 ? 's' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Input
+                  value={reviewTitle}
+                  onChange={(event) => setReviewTitle(event.target.value)}
+                  placeholder="Review title (optional)"
+                  aria-label="Review title"
+                />
+                <textarea
+                  value={reviewContent}
+                  onChange={(event) => setReviewContent(event.target.value)}
+                  placeholder="Share your thoughts about this book"
+                  rows={3}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  style={{ borderColor: 'var(--parchment-border)', backgroundColor: 'var(--parchment-light)' }}
+                />
+                <Button type="submit" size="sm" isLoading={createReview.isPending}>
+                  Submit review
+                </Button>
+              </form>
+            )}
+
+            {book.reviews && book.reviews.length > 0 ? (
+              <div className="space-y-3">
+                {book.reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="p-4 rounded-lg"
+                    style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1" aria-label={`${review.rating} out of 5 stars`}>
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <Star
+                              key={value}
+                              className="h-4 w-4"
+                              style={{
+                                color: value <= review.rating ? '#eab308' : 'var(--parchment-border)',
+                                fill: value <= review.rating ? '#eab308' : 'none',
+                              }}
+                            />
+                          ))}
+                        </span>
+                        <span className="text-sm font-medium" style={{ color: 'var(--ink-primary)' }}>
+                          {review.title || 'Review'}
+                        </span>
+                      </div>
+                      {user && review.userId === user.id && (
+                        <button
+                          type="button"
+                          onClick={() => handleReviewDelete(review.id)}
+                          aria-label="Delete review"
+                          className="p-1 hover:opacity-70"
+                          style={{ color: 'var(--ink-secondary)' }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    {review.content && (
+                      <p className="mt-2 text-sm" style={{ color: 'var(--ink-secondary)' }}>
+                        {review.content}
+                      </p>
+                    )}
+                    <p className="mt-2 text-xs" style={{ color: 'var(--ink-secondary)' }}>
+                      {review.user
+                        ? `${review.user.firstName} ${review.user.lastName}`
+                        : 'Member'}{' '}
+                      · {new Date(review.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: 'var(--ink-secondary)' }}>
+                No reviews yet. Borrow and return this book to be the first reviewer.
+              </p>
+            )}
+          </div>
 
           <div className="p-4 rounded-lg mb-6" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
             <div className="flex items-center justify-between flex-wrap gap-4">
