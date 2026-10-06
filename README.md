@@ -126,30 +126,26 @@ Library_Management_System/
 
 ## API Endpoints
 
+A complete, current endpoint reference lives in
+[`__docs__/api/endpoints.md`](__docs__/api/endpoints.md). Highlights:
+
 ### Authentication
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/refresh-token` - Refresh JWT tokens
-- `GET /api/v1/auth/profile` - Get user profile
-- `POST /api/v1/auth/change-password` - Change password
+- `POST /api/v1/auth/register` - Register new member
+- `POST /api/v1/auth/login` - Login (refresh token in HttpOnly cookie)
+- `POST /api/v1/auth/refresh-token` - Rotate the session
+- `POST /api/v1/auth/logout` - Revoke the session
 
-### Books
-- `GET /api/v1/books` - Search/list books
-- `GET /api/v1/books/:id` - Get book details
-- `POST /api/v1/books` - Create book (Admin/Librarian)
-- `PUT /api/v1/books/:id` - Update book (Admin/Librarian)
-- `DELETE /api/v1/books/:id` - Delete book (Admin)
+### Catalog & Circulation
+- `GET /api/v1/books` - Search/filter/sort the catalog
+- `POST /api/v1/books/:id/reviews` - Review a returned title
+- `POST /api/v1/loans/checkout` / `checkin` - Barcode or copy ID
+- `POST /api/v1/reservations` - Join the waitlist
 
-### Loans
-- `POST /api/v1/loans/checkout` - Check out book (Librarian)
-- `POST /api/v1/loans/checkin` - Return book (Librarian)
-- `POST /api/v1/loans/:loanId/renew` - Renew loan
-- `GET /api/v1/loans/my` - Get user's loans
-
-### Reservations
-- `POST /api/v1/reservations` - Create reservation
-- `GET /api/v1/reservations/my` - Get user's reservations
-- `POST /api/v1/reservations/:id/cancel` - Cancel reservation
+### Fines, inventory and admin
+- `GET /api/v1/fines/my`, `POST /api/v1/fines/:id/pay`, `.../waive`
+- `GET /api/v1/book-copies?bookId=`, `PATCH /api/v1/book-copies/:id`
+- `GET /api/v1/libraries`, `POST /api/v1/admin/users`
+- `GET /api/v1/reports/dashboard`, `GET/PUT /api/v1/settings`
 
 ## Configuration
 

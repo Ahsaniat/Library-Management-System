@@ -2,6 +2,15 @@ import nodemailer, { Transporter, SentMessageInfo } from 'nodemailer';
 import config from '../config';
 import logger from '../utils/logger';
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 interface EmailOptions {
   to: string;
   subject: string;
@@ -110,12 +119,12 @@ class EmailService {
     return {
       subject: 'Welcome to Library Management System - Verify Your Email',
       html: `
-        <h1>Welcome, ${firstName}!</h1>
+        <h1>Welcome, ${escapeHtml(firstName)}!</h1>
         <p>Thank you for registering with the Library Management System.</p>
         <p>Please verify your email by clicking the link below:</p>
-        <p><a href="${verifyUrl}" style="background-color:#3b82f6;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Verify Email</a></p>
+        <p><a href="${escapeHtml(verifyUrl)}" style="background-color:#3b82f6;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Verify Email</a></p>
         <p>If the button doesn't work, copy and paste this link into your browser:</p>
-        <p>${verifyUrl}</p>
+        <p>${escapeHtml(verifyUrl)}</p>
         <p>This link will expire in 24 hours.</p>
       `,
       text: `Welcome, ${firstName}!\n\nThank you for registering. Please verify your email by visiting: ${verifyUrl}\n\nThis link expires in 24 hours.`,
@@ -127,9 +136,9 @@ class EmailService {
       subject: 'Password Reset Request - Library Management System',
       html: `
         <h1>Password Reset</h1>
-        <p>Hi ${firstName},</p>
+        <p>Hi ${escapeHtml(firstName)},</p>
         <p>We received a request to reset your password. Click the link below to set a new password:</p>
-        <p><a href="${resetUrl}" style="background-color:#3b82f6;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Reset Password</a></p>
+        <p><a href="${escapeHtml(resetUrl)}" style="background-color:#3b82f6;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Reset Password</a></p>
         <p>If you didn't request this, you can safely ignore this email.</p>
         <p>This link will expire in 1 hour.</p>
       `,
@@ -143,10 +152,10 @@ class EmailService {
       subject: `Reminder: "${bookTitle}" is due soon`,
       html: `
         <h1>Book Due Reminder</h1>
-        <p>Hi ${firstName},</p>
+        <p>Hi ${escapeHtml(firstName)},</p>
         <p>This is a friendly reminder that the following book is due soon:</p>
-        <p><strong>${bookTitle}</strong></p>
-        <p>Due Date: <strong>${formattedDate}</strong></p>
+        <p><strong>${escapeHtml(bookTitle)}</strong></p>
+        <p>Due Date: <strong>${escapeHtml(formattedDate)}</strong></p>
         <p>Please return or renew the book before the due date to avoid late fees.</p>
       `,
       text: `Hi ${firstName},\n\nReminder: "${bookTitle}" is due on ${formattedDate}.\n\nPlease return or renew to avoid late fees.`,
@@ -158,9 +167,9 @@ class EmailService {
       subject: `Overdue Notice: "${bookTitle}" - $${fine.toFixed(2)} fine`,
       html: `
         <h1>Overdue Book Notice</h1>
-        <p>Hi ${firstName},</p>
+        <p>Hi ${escapeHtml(firstName)},</p>
         <p>The following book is <strong>${daysOverdue} days overdue</strong>:</p>
-        <p><strong>${bookTitle}</strong></p>
+        <p><strong>${escapeHtml(bookTitle)}</strong></p>
         <p>Current fine: <strong style="color:red;">$${fine.toFixed(2)}</strong></p>
         <p>Please return the book as soon as possible. Fines continue to accumulate at $0.50 per day.</p>
       `,
@@ -174,10 +183,10 @@ class EmailService {
       subject: `Your reservation is ready: "${bookTitle}"`,
       html: `
         <h1>Reservation Ready!</h1>
-        <p>Hi ${firstName},</p>
+        <p>Hi ${escapeHtml(firstName)},</p>
         <p>Great news! The book you reserved is now available for pickup:</p>
-        <p><strong>${bookTitle}</strong></p>
-        <p>Please pick up the book by <strong>${formattedDate}</strong> or your reservation will expire.</p>
+        <p><strong>${escapeHtml(bookTitle)}</strong></p>
+        <p>Please pick up the book by <strong>${escapeHtml(formattedDate)}</strong> or your reservation will expire.</p>
       `,
       text: `Hi ${firstName},\n\n"${bookTitle}" is ready for pickup!\n\nPick up by ${formattedDate} or your reservation expires.`,
     };
@@ -188,10 +197,10 @@ class EmailService {
       subject: `Fine Notice: $${amount.toFixed(2)} - Library Management System`,
       html: `
         <h1>Fine Notice</h1>
-        <p>Hi ${firstName},</p>
+        <p>Hi ${escapeHtml(firstName)},</p>
         <p>A fine has been added to your account:</p>
         <p>Amount: <strong style="color:red;">$${amount.toFixed(2)}</strong></p>
-        <p>Reason: ${reason}</p>
+        <p>Reason: ${escapeHtml(reason)}</p>
         <p>Please pay this fine at your earliest convenience to avoid restrictions on borrowing.</p>
       `,
       text: `Hi ${firstName},\n\nFine added: $${amount.toFixed(2)}\nReason: ${reason}\n\nPlease pay at your earliest convenience.`,
