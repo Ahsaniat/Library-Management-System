@@ -19,7 +19,6 @@ interface RegisterData {
   firstName: string;
   lastName: string;
   phone?: string;
-  role?: UserRole;
 }
 
 interface LoginResult {
@@ -44,7 +43,9 @@ export class AuthService {
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
-      role: data.role ?? UserRole.MEMBER,
+      // Self-registration can never choose a role. Admin-initiated accounts
+      // use the admin-only POST /admin/users endpoint instead.
+      role: UserRole.MEMBER,
       emailVerificationToken: verificationToken,
     });
 

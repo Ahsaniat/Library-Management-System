@@ -5,7 +5,13 @@ import { ApiResponse } from '../types';
 export class AuthController {
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const user = await authService.register(req.body);
+      const user = await authService.register({
+        email: req.body.email,
+        password: req.body.password,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        phone: req.body.phone,
+      });
       const response: ApiResponse = {
         success: true,
         message: 'Registration successful. Please verify your email.',

@@ -22,6 +22,11 @@ export const registerValidator = [
     .optional()
     .isMobilePhone('any')
     .withMessage('Invalid phone number'),
+  // Privilege escalation guard: role is never user-selectable.
+  body('role')
+    .not()
+    .exists()
+    .withMessage('Role cannot be set during registration'),
 ];
 
 export const loginValidator = [
