@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { AlertCircle, Check } from 'lucide-react';
 import { Button, Input, LoadingSpinner, Pagination } from '../../components';
 import { useAllFines, usePayFine, useWaiveFine } from '../../hooks/useFines';
-import { Fine } from '../../types';
-import { formatDate } from '../../utils';
+import { Fine, UserRole } from '../../types';
+import { formatDate, getApiErrorMessage } from '../../utils';
+import { useAuthStore } from '../../store';
 
 type ActionState = { id: string; type: 'pay' | 'waive' } | null;
 
@@ -20,6 +21,8 @@ export default function FineManagement() {
   const fines = data?.fines ?? [];
   const payFine = usePayFine();
   const waiveFine = useWaiveFine();
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.role === UserRole.ADMIN;
 
   const outstanding = (fine: Fine) => Number(fine.amount) - Number(fine.paidAmount);
 
@@ -38,7 +41,7 @@ export default function FineManagement() {
     } catch (err) {
       setMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to record payment',
+        text: getApiErrorMessage(err, 'Failed to record payment'),
       });
     }
   };
@@ -49,7 +52,7 @@ export default function FineManagement() {
       setMessage({ type: 'success', text: 'Fine waived' });
       setAction(null);
     } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to waive fine' });
+      setMessage({ type: 'error', text: getApiErrorMessage(err, 'Failed to waive fine') });
     }
   };
 
@@ -227,9 +230,11 @@ export default function FineManagement() {
                             <Button size="sm" variant="outline" onClick={() => startAction(fine, 'pay')}>
                               Pay
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => startAction(fine, 'waive')}>
-                              Waive
-                            </Button>
+                            {fine.status === 'pending' && isAdmin && (
+                              <Button size="sm" variant="outline" onClick={() => startAction(fine, 'waive')}>
+                                Waive
+                              </Button>
+                            )}
                           </>
                         )}
                       </div>
