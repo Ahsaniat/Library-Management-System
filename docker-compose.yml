@@ -18,6 +18,28 @@ services:
     networks:
       - library_network
 
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+      target: builder
+    container_name: library_migrate
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: library_db
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+    command: sh -c "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - library_network
+
   server:
     build:
       context: .
@@ -39,6 +61,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - library_network
     restart: unless-stopped

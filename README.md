@@ -51,8 +51,12 @@ A full-scale, self-hostable library management system built with modern technolo
    ```bash
    # Create database
    psql -U postgres -c "CREATE DATABASE library_db;"
-   
-   # The database will auto-sync on first run in development
+
+   # Apply versioned schema migrations
+   cd server && npm run db:migrate
+
+   # Seed system settings (loan period, fine rate, ...)
+   npm run db:seed
    ```
 
 5. **Start development servers**

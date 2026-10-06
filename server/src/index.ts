@@ -11,7 +11,7 @@ import {
   requestLogger,
   generalLimiter,
 } from './middleware';
-import { testConnection, syncDatabase } from './config/database';
+import { testConnection } from './config/database';
 import logger from './utils/logger';
 
 const app: Application = express();
@@ -42,8 +42,9 @@ app.use(errorHandler);
 async function startServer(): Promise<void> {
   try {
     await testConnection();
-    await syncDatabase();
 
+    // The schema is owned by versioned migrations (`npm run db:migrate`) and
+    // is deliberately never synced from models at startup.
     app.listen(config.port, () => {
       logger.info(`Server running on port ${config.port} in ${config.nodeEnv} mode`);
     });
