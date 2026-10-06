@@ -81,6 +81,21 @@ describe('checkoutValidator', () => {
     });
     expect(result.isEmpty()).toBe(false);
   });
+
+  it('accepts a barcode as the copy reference', async () => {
+    const result = await runValidator(checkoutValidator, {
+      barcode: 'LIB-ABC-123',
+      userId: '3f1b2c9e-4a5d-4b6f-8c7e-9d0a1b2c3d4e',
+    });
+    expect(result.isEmpty()).toBe(true);
+  });
+
+  it('requires either a copy id or a barcode', async () => {
+    const result = await runValidator(checkoutValidator, {
+      userId: '3f1b2c9e-4a5d-4b6f-8c7e-9d0a1b2c3d4e',
+    });
+    expect(result.isEmpty()).toBe(false);
+  });
 });
 
 describe('renewValidator', () => {

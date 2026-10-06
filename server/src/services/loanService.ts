@@ -9,12 +9,18 @@ import { reservationService } from './reservationService';
 import logger from '../utils/logger';
 
 interface CheckoutData {
-  bookCopyId: string;
+  bookCopyId?: string;
+  barcode?: string;
   userId: string;
   librarianId?: string;
   dueDate?: Date;
   isSelfCheckout?: boolean;
   overrideHold?: boolean;
+}
+
+interface CheckinData {
+  bookCopyId?: string;
+  barcode?: string;
 }
 
 interface SelfCheckoutData {
@@ -157,11 +163,18 @@ export class LoanService {
 
   async checkout(data: CheckoutData): Promise<Loan> {
     return sequelize.transaction(async (t: Transaction) => {
-      const bookCopy = await BookCopy.findByPk(data.bookCopyId, {
-        include: [{ model: Book, as: 'book' }],
-        transaction: t,
-        lock: t.LOCK.UPDATE,
-      });
+      // The row lock must not be combined with an eager-loaded association:
+      // PostgreSQL rejects FOR UPDATE on the nullable side of an outer join.
+      const bookCopy = data.bookCopyId
+        ? await BookCopy.findByPk(data.bookCopyId, {
+            transaction: t,
+            lock: t.LOCK.UPDATE,
+          })
+        : await BookCopy.findOne({
+            where: { barcode: data.barcode },
+            transaction: t,
+            lock: t.LOCK.UPDATE,
+          });
 
       if (!bookCopy) {
         throw new NotFoundError('Book copy');
@@ -233,7 +246,7 @@ export class LoanService {
 
       const loan = await Loan.create(
         {
-          bookCopyId: data.bookCopyId,
+          bookCopyId: bookCopy.id,
           userId: data.userId,
           librarianId: data.librarianId,
           dueDate,
@@ -258,7 +271,7 @@ export class LoanService {
       logger.info({
         action: 'book_checkout',
         loanId: loan.id,
-        bookCopyId: data.bookCopyId,
+        bookCopyId: bookCopy.id,
         userId: data.userId,
       });
 
@@ -266,11 +279,22 @@ export class LoanService {
     });
   }
 
-  async checkin(bookCopyId: string, librarianId?: string, notes?: string): Promise<CheckinResult> {
+  async checkin(data: CheckinData, librarianId?: string, notes?: string): Promise<CheckinResult> {
     return sequelize.transaction(async (t: Transaction) => {
+      const bookCopy = data.bookCopyId
+        ? await BookCopy.findByPk(data.bookCopyId, { transaction: t, lock: t.LOCK.UPDATE })
+        : await BookCopy.findOne({
+            where: { barcode: data.barcode },
+            transaction: t,
+            lock: t.LOCK.UPDATE,
+          });
+
+      if (!bookCopy) {
+        throw new NotFoundError('Book copy');
+      }
+
       const loan = await Loan.findOne({
-        where: { bookCopyId, status: LoanStatus.ACTIVE },
-        include: [{ model: BookCopy, as: 'bookCopy' }],
+        where: { bookCopyId: bookCopy.id, status: LoanStatus.ACTIVE },
         transaction: t,
         lock: t.LOCK.UPDATE,
       });
@@ -293,7 +317,7 @@ export class LoanService {
 
       await BookCopy.update(
         { status: BookStatus.AVAILABLE },
-        { where: { id: bookCopyId }, transaction: t }
+        { where: { id: bookCopy.id }, transaction: t }
       );
 
       let fineResult: { amount: number; reason: string } | undefined;
@@ -315,13 +339,12 @@ export class LoanService {
         }
       }
 
-      const bookCopy = loan.get('bookCopy') as BookCopy;
       await reservationService.promoteNextReservation(bookCopy.bookId, t);
 
       logger.info({
         action: 'book_checkin',
         loanId: loan.id,
-        bookCopyId,
+        bookCopyId: bookCopy.id,
         isOverdue,
         fine: fineResult?.amount,
       });

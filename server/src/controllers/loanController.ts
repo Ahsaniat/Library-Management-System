@@ -41,8 +41,8 @@ export class LoanController {
 
   async checkin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { bookCopyId, notes } = req.body;
-      const result = await loanService.checkin(bookCopyId, req.user?.id, notes);
+      const { bookCopyId, barcode, notes } = req.body;
+      const result = await loanService.checkin({ bookCopyId, barcode }, req.user?.id, notes);
       const response: ApiResponse = {
         success: true,
         message: result.fine

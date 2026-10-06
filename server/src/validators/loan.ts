@@ -1,9 +1,25 @@
 import { body, param, query } from 'express-validator';
 
-export const checkoutValidator = [
+const copyReferenceValidator = [
   body('bookCopyId')
+    .optional()
     .isUUID()
-    .withMessage('Valid book copy ID is required'),
+    .withMessage('bookCopyId must be a valid UUID'),
+  body('barcode')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Invalid barcode'),
+  body().custom((_value, { req }) => {
+    if (!req.body.bookCopyId && !req.body.barcode) {
+      throw new Error('Either bookCopyId or barcode is required');
+    }
+    return true;
+  }),
+];
+
+export const checkoutValidator = [
+  ...copyReferenceValidator,
   body('userId')
     .isUUID()
     .withMessage('Valid user ID is required'),
@@ -19,9 +35,7 @@ export const checkoutValidator = [
 ];
 
 export const checkinValidator = [
-  body('bookCopyId')
-    .isUUID()
-    .withMessage('Valid book copy ID is required'),
+  ...copyReferenceValidator,
   body('condition')
     .optional()
     .isIn(['new', 'good', 'fair', 'poor', 'damaged'])

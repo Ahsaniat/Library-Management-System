@@ -1,6 +1,18 @@
 import api from './api';
 import { ApiResponse, Loan } from '../types';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export interface CopyReference {
+  bookCopyId?: string;
+  barcode?: string;
+}
+
+/** Accepts either a copy UUID or a barcode from the same scanner input. */
+export function toCopyReference(value: string): CopyReference {
+  const trimmed = value.trim();
+  return UUID_PATTERN.test(trimmed) ? { bookCopyId: trimmed } : { barcode: trimmed };
+}
+
 export const loanService = {
   async getMyLoans(status?: string): Promise<Loan[]> {
     const response = await api.get<ApiResponse<{ loans: Loan[] }>>('/loans/my', {
@@ -21,18 +33,19 @@ export const loanService = {
     return response.data.data!.loan;
   },
 
-  async checkout(bookCopyId: string, userId: string): Promise<Loan> {
+  async checkout(bookReference: string, userId: string, overrideHold = false): Promise<Loan> {
     const response = await api.post<ApiResponse<{ loan: Loan }>>('/loans/checkout', {
-      bookCopyId,
+      ...toCopyReference(bookReference),
       userId,
+      overrideHold,
     });
     return response.data.data!.loan;
   },
 
-  async checkin(bookCopyId: string): Promise<{ loan: Loan; fine?: { amount: number } }> {
+  async checkin(bookReference: string): Promise<{ loan: Loan; fine?: { amount: number } }> {
     const response = await api.post<
       ApiResponse<{ loan: Loan; fine?: { amount: number } }>
-    >('/loans/checkin', { bookCopyId });
+    >('/loans/checkin', toCopyReference(bookReference));
     return response.data.data!;
   },
 
