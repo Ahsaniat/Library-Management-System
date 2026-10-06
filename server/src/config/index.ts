@@ -48,6 +48,7 @@ interface Config {
   };
   logLevel: string;
   openLibraryApiUrl: string;
+  jobsEnabled: boolean;
 }
 
 function getEnvVar(key: string, defaultValue?: string): string {
@@ -139,6 +140,7 @@ export const config: Config = {
   },
   logLevel: getEnvVar('LOG_LEVEL', 'info'),
   openLibraryApiUrl: getEnvVar('OPEN_LIBRARY_API_URL', 'https://openlibrary.org'),
+  jobsEnabled: getEnvVarAsBoolean('JOBS_ENABLED', true),
 };
 
 export default config;

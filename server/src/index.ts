@@ -12,6 +12,8 @@ import {
   generalLimiter,
 } from './middleware';
 import { testConnection } from './config/database';
+import sequelize from './config/database';
+import { startScheduler, stopScheduler } from './jobs';
 import logger from './utils/logger';
 
 const app: Application = express();
@@ -45,9 +47,21 @@ async function startServer(): Promise<void> {
 
     // The schema is owned by versioned migrations (`npm run db:migrate`) and
     // is deliberately never synced from models at startup.
-    app.listen(config.port, () => {
+    const server = app.listen(config.port, () => {
       logger.info(`Server running on port ${config.port} in ${config.nodeEnv} mode`);
+      startScheduler();
     });
+
+    const shutdown = async (signal: string): Promise<void> => {
+      logger.info(`Received ${signal}; shutting down`);
+      stopScheduler();
+      server.close();
+      await sequelize.close();
+      process.exit(0);
+    };
+
+    process.on('SIGTERM', () => void shutdown('SIGTERM'));
+    process.on('SIGINT', () => void shutdown('SIGINT'));
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);

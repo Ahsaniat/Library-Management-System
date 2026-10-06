@@ -154,6 +154,10 @@ export class NotificationService {
 
     let sentCount = 0;
     for (const loan of loansWithinRange) {
+      if (await this.wasRecentlySent(loan.userId, NotificationType.DUE_REMINDER, loan.id)) {
+        continue;
+      }
+
       const borrower = loan.get('borrower') as User;
       const bookCopy = loan.get('bookCopy') as { book?: { title: string } };
       const bookTitle = bookCopy?.book?.title ?? 'Unknown';
@@ -193,6 +197,10 @@ export class NotificationService {
     let sentCount = 0;
     const finePerDay = await settingService.getNumber('fine.perDay', 0.5);
     for (const loan of overdueLoans) {
+      if (await this.wasRecentlySent(loan.userId, NotificationType.OVERDUE_NOTICE, loan.id)) {
+        continue;
+      }
+
       const borrower = loan.get('borrower') as User;
       const bookCopy = loan.get('bookCopy') as { book?: { title: string } };
       const bookTitle = bookCopy?.book?.title ?? 'Unknown';
@@ -213,6 +221,27 @@ export class NotificationService {
 
     logger.info({ action: 'overdue_notices_sent', count: sentCount });
     return sentCount;
+  }
+
+  /**
+   * Scheduled jobs can be retried or run twice; per-loan notifications are
+   * deduplicated for a 24h window using the JSONB payload.
+   */
+  private async wasRecentlySent(
+    userId: string,
+    type: NotificationType,
+    loanId: string
+  ): Promise<boolean> {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const count = await Notification.count({
+      where: {
+        userId,
+        type,
+        createdAt: { [Op.gt]: since },
+        data: { [Op.contains]: { loanId } },
+      },
+    });
+    return count > 0;
   }
 }
 
