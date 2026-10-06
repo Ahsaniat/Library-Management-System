@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
-import { useBooks } from '../hooks';
+import { useBooks, useCategories } from '../hooks';
 import { BookCard, LoadingSpinner, Button, Input } from '../components';
 
 interface FilterState {
@@ -39,6 +39,7 @@ export default function Books() {
   };
 
   const { data, isLoading, error } = useBooks(params);
+  const { data: categories } = useCategories();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,11 +155,19 @@ export default function Books() {
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--ink-secondary)' }}>
                 Category
               </label>
-              <Input
-                placeholder="e.g., Fiction, Science"
+              <select
                 value={filters.category}
                 onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-              />
+                className="w-full px-4 py-2 border rounded-lg"
+                style={{ borderColor: 'var(--parchment-border)', backgroundColor: 'var(--parchment-light)' }}
+              >
+                <option value="">All Categories</option>
+                {categories?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--ink-secondary)' }}>

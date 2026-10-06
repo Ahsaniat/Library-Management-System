@@ -1,5 +1,5 @@
 import api from './api';
-import { ApiResponse, Book, PaginatedResponse } from '../types';
+import { ApiResponse, Book, Category, PaginatedResponse } from '../types';
 
 export interface BookSearchParams {
   q?: string;
@@ -7,7 +7,9 @@ export interface BookSearchParams {
   limit?: number;
   category?: string;
   author?: string;
+  publisher?: string;
   year?: number;
+  language?: string;
   available?: boolean;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
@@ -36,6 +38,11 @@ export const bookService = {
       params: { limit },
     });
     return response.data.data!.books;
+  },
+
+  async getCategories(): Promise<Category[]> {
+    const response = await api.get<ApiResponse<{ categories: Category[] }>>('/books/categories');
+    return response.data.data!.categories;
   },
 
   async create(data: Partial<Book>): Promise<Book> {

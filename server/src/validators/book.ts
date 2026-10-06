@@ -123,11 +123,26 @@ export const bookSearchValidator = [
   query('author')
     .optional()
     .isUUID(),
+  query('publisher')
+    .optional()
+    .isUUID(),
   query('year')
     .optional()
     .isInt({ min: 1000 }),
+  query('language')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 }),
   query('available')
     .optional()
     .isBoolean()
     .toBoolean(),
+  query('sortBy')
+    .optional()
+    .isIn(['title', 'publishedYear', 'averageRating', 'totalRatings', 'createdAt'])
+    .withMessage('Invalid sort field'),
+  query('sortOrder')
+    .optional()
+    .isIn(['asc', 'desc'])
+    .withMessage('Invalid sort order'),
 ];

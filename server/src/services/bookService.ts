@@ -39,6 +39,14 @@ interface CreateBookData {
 }
 
 export class BookService {
+  private static readonly SORTABLE_COLUMNS: Record<string, string> = {
+    title: 'title',
+    publishedYear: 'publishedYear',
+    averageRating: 'averageRating',
+    totalRatings: 'totalRatings',
+    createdAt: 'createdAt',
+  };
+
   async search(params: BookSearchParams): Promise<PaginatedResponse<Book>> {
     const { page = 1, limit = 20, sortBy = 'title', sortOrder = 'asc' } = params;
     const offset = (page - 1) * limit;
@@ -48,15 +56,27 @@ export class BookService {
       { model: Author, as: 'author', attributes: ['id', 'name'] },
       { model: Category, as: 'category', attributes: ['id', 'name'] },
       { model: Publisher, as: 'publisher', attributes: ['id', 'name'] },
-      { model: BookCopy, as: 'copies', attributes: ['id', 'barcode', 'status', 'condition'] },
     ];
 
     if (params.q) {
-      where[Op.or as unknown as string] = [
+      const matchingAuthors = await Author.findAll({
+        where: { name: { [Op.iLike]: `%${params.q}%` } },
+        attributes: ['id'],
+      });
+
+      const searchConditions: WhereOptions[] = [
         { title: { [Op.iLike]: `%${params.q}%` } },
         { isbn: { [Op.iLike]: `%${params.q}%` } },
         { description: { [Op.iLike]: `%${params.q}%` } },
       ];
+
+      if (matchingAuthors.length > 0) {
+        searchConditions.push({
+          authorId: { [Op.in]: matchingAuthors.map((author) => author.id) },
+        });
+      }
+
+      where[Op.or as unknown as string] = searchConditions;
     }
 
     if (params.category) {
@@ -79,25 +99,34 @@ export class BookService {
       where.language = params.language;
     }
 
-    if (params.available) {
-      include.push({
-        model: BookCopy,
-        as: 'copies',
-        where: { status: BookStatus.AVAILABLE },
-        required: true,
-      });
-    }
+    // A single include is used for both display and availability filtering so
+    // the query never joins book_copies twice under the same alias.
+    include.push({
+      model: BookCopy,
+      as: 'copies',
+      attributes: ['id', 'barcode', 'status', 'condition'],
+      ...(params.available
+        ? { where: { status: BookStatus.AVAILABLE }, required: true }
+        : {}),
+    });
+
+    const sortColumn = BookService.SORTABLE_COLUMNS[sortBy] ?? 'title';
+    const direction = sortOrder === 'desc' ? 'DESC' : 'ASC';
 
     const { rows, count } = await Book.findAndCountAll({
       where,
       include,
       limit,
       offset,
-      order: [[sortBy, sortOrder.toUpperCase()]],
+      order: [[sortColumn, direction]],
       distinct: true,
     });
 
     return calculatePagination(rows, count, { page, limit });
+  }
+
+  async getCategories(): Promise<Category[]> {
+    return Category.findAll({ order: [['name', 'ASC']] });
   }
 
   async findById(id: string): Promise<Book> {

@@ -67,7 +67,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900">Popular Books</h2>
-            <Link to="/books?sort=popular" className="text-blue-600 hover:underline">
+            <Link to="/books?sortBy=totalRatings&sortOrder=desc" className="text-blue-600 hover:underline">
               View All
             </Link>
           </div>
@@ -87,7 +87,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900">Recently Added</h2>
-            <Link to="/books?sort=recent" className="text-blue-600 hover:underline">
+            <Link to="/books?sortBy=createdAt&sortOrder=desc" className="text-blue-600 hover:underline">
               View All
             </Link>
           </div>

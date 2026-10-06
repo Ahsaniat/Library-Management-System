@@ -39,6 +39,11 @@ router.get(
 );
 
 router.get(
+  '/categories',
+  bookController.getCategories.bind(bookController)
+);
+
+router.get(
   '/:id',
   optionalAuth,
   validate(bookIdValidator),

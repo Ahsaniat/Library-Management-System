@@ -31,6 +31,14 @@ export function useRecentBooks(limit = 10) {
   });
 }
 
+export function useCategories() {
+  return useQuery({
+    queryKey: ['books', 'categories'],
+    queryFn: () => bookService.getCategories(),
+    staleTime: 30 * 60 * 1000,
+  });
+}
+
 export function useCreateBook() {
   const queryClient = useQueryClient();
 

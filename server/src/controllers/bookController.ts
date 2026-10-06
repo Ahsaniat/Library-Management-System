@@ -15,7 +15,9 @@ export class BookController {
         author: req.query.author as string | undefined,
         publisher: req.query.publisher as string | undefined,
         year: req.query.year ? parseInt(req.query.year as string) : undefined,
-        available: req.query.available === 'true',
+        // express-validator's toBoolean() replaces the query value with a real
+        // boolean at runtime; the static type stays string-based.
+        available: Boolean(req.query.available),
         language: req.query.language as string | undefined,
       };
 
@@ -111,6 +113,20 @@ export class BookController {
       const response: ApiResponse = {
         success: true,
         data: { books },
+        requestId: req.requestId,
+      };
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getCategories(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const categories = await bookService.getCategories();
+      const response: ApiResponse = {
+        success: true,
+        data: { categories },
         requestId: req.requestId,
       };
       res.json(response);
