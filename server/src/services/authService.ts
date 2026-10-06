@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 import config from '../config';
 import User from '../models/User';
 import RefreshToken from '../models/RefreshToken';
-import { hashPassword, comparePassword } from '../utils/helpers';
+import { hashPassword, comparePassword, hashToken } from '../utils/helpers';
 import {
   ValidationError,
   UnauthorizedError,
@@ -11,6 +11,7 @@ import {
   ConflictError,
 } from '../utils/errors';
 import { UserRole } from '../types';
+import { emailService } from './emailService';
 import logger from '../utils/logger';
 import {
   signAccessToken,
@@ -49,6 +50,7 @@ export class AuthService {
 
     const hashedPassword = await hashPassword(data.password);
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const user = await User.create({
       email: data.email,
@@ -59,8 +61,19 @@ export class AuthService {
       // Self-registration can never choose a role. Admin-initiated accounts
       // use the admin-only POST /admin/users endpoint instead.
       role: UserRole.MEMBER,
-      emailVerificationToken: verificationToken,
+      emailVerificationToken: hashToken(verificationToken),
+      emailVerificationExpires: verificationExpires,
     });
+
+    const emailSent = await emailService.sendWelcomeEmail(
+      user.email,
+      user.firstName,
+      verificationToken
+    );
+
+    if (!emailSent) {
+      logger.warn({ action: 'verification_email_failed', userId: user.id });
+    }
 
     logger.info({ action: 'user_registered', userId: user.id });
     return user;
@@ -81,6 +94,10 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
+    if (config.requireEmailVerification && !user.isEmailVerified) {
+      throw new UnauthorizedError('Please verify your email address before signing in');
+    }
+
     await user.update({ lastLoginAt: new Date() });
 
     const tokens = await this.issueTokenPair(user, meta);
@@ -90,14 +107,21 @@ export class AuthService {
   }
 
   async verifyEmail(token: string): Promise<void> {
-    const user = await User.findOne({ where: { emailVerificationToken: token } });
+    const user = await User.findOne({
+      where: { emailVerificationToken: hashToken(token) },
+    });
     if (!user) {
       throw new ValidationError('Invalid verification token');
+    }
+
+    if (!user.emailVerificationExpires || user.emailVerificationExpires.getTime() < Date.now()) {
+      throw new ValidationError('Verification token has expired');
     }
 
     await user.update({
       isEmailVerified: true,
       emailVerificationToken: undefined,
+      emailVerificationExpires: undefined,
     });
 
     logger.info({ action: 'email_verified', userId: user.id });
@@ -113,9 +137,19 @@ export class AuthService {
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
     await user.update({
-      passwordResetToken: resetToken,
+      passwordResetToken: hashToken(resetToken),
       passwordResetExpires: resetExpires,
     });
+
+    const emailSent = await emailService.sendPasswordResetEmail(
+      user.email,
+      user.firstName,
+      resetToken
+    );
+
+    if (!emailSent) {
+      logger.warn({ action: 'password_reset_email_failed', userId: user.id });
+    }
 
     logger.info({ action: 'password_reset_requested', userId: user.id });
     return resetToken;
@@ -124,7 +158,7 @@ export class AuthService {
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const user = await User.findOne({
       where: {
-        passwordResetToken: token,
+        passwordResetToken: hashToken(token),
         passwordResetExpires: { [Op.gt]: new Date() },
       },
     });

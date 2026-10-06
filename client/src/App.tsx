@@ -12,6 +12,9 @@ import NotFound from './pages/NotFound';
 import Profile from './pages/Profile';
 import MyWishlist from './pages/MyWishlist';
 import MyBookRequests from './pages/MyBookRequests';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
 import { AdminDashboard, UserManagement, BookManagement, LoanManagement, Reports, BookRequestManagement, Settings } from './pages/admin';
@@ -24,6 +27,9 @@ function App() {
         <Route index element={<Home />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password/:token" element={<ResetPassword />} />
+        <Route path="verify-email/:token" element={<VerifyEmail />} />
         <Route path="books" element={<Books />} />
         <Route path="books/:id" element={<BookDetail />} />
         <Route

@@ -1,9 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { PaginationParams, PaginatedResponse } from '../types';
 
 export function generateRequestId(): string {
   return uuidv4();
+}
+
+/** SHA-256 hash used for one-time tokens so a DB read cannot leak them. */
+export function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 export async function hashPassword(password: string): Promise<string> {

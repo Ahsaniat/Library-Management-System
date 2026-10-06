@@ -49,6 +49,7 @@ interface Config {
   logLevel: string;
   openLibraryApiUrl: string;
   jobsEnabled: boolean;
+  requireEmailVerification: boolean;
 }
 
 function getEnvVar(key: string, defaultValue?: string): string {
@@ -101,8 +102,10 @@ function getJwtSecret(key: string): string {
   return value;
 }
 
+const NODE_ENV = getEnvVar('NODE_ENV', 'development');
+
 export const config: Config = {
-  nodeEnv: getEnvVar('NODE_ENV', 'development'),
+  nodeEnv: NODE_ENV,
   port: getEnvVarAsNumber('PORT', 3001),
   database: {
     host: getEnvVar('DB_HOST', 'localhost'),
@@ -141,6 +144,12 @@ export const config: Config = {
   logLevel: getEnvVar('LOG_LEVEL', 'info'),
   openLibraryApiUrl: getEnvVar('OPEN_LIBRARY_API_URL', 'https://openlibrary.org'),
   jobsEnabled: getEnvVarAsBoolean('JOBS_ENABLED', true),
+  // Verification is enforced in production by default; development and tests
+  // keep it optional so local accounts remain usable without SMTP.
+  requireEmailVerification: getEnvVarAsBoolean(
+    'REQUIRE_EMAIL_VERIFICATION',
+    NODE_ENV === 'production'
+  ),
 };
 
 export default config;

@@ -10,3 +10,6 @@ export { default as NotFound } from './NotFound';
 export { default as Profile } from './Profile';
 export { default as MyWishlist } from './MyWishlist';
 export { default as MyBookRequests } from './MyBookRequests';
+export { default as ForgotPassword } from './ForgotPassword';
+export { default as ResetPassword } from './ResetPassword';
+export { default as VerifyEmail } from './VerifyEmail';
