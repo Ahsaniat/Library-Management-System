@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Users, BookOpen, Calendar, DollarSign } from 'lucide-react';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components';
+import { Link } from 'react-router-dom';
+import { useCurrency } from '../../hooks/useSettings';
 
 interface DashboardStats {
   circulation: {
@@ -43,6 +45,7 @@ function useDashboardStats() {
 }
 
 export default function AdminDashboard() {
+  const { format } = useCurrency();
   const { data: stats, isLoading, error } = useDashboardStats();
 
   if (isLoading) {
@@ -68,28 +71,32 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          icon={<Users className="h-6 w-6" style={{ color: 'var(--accent-warm)' }} />}
+          to="/admin/users"
+          icon={<Users className="h-6 w-6" style={{ color: '#111827' }} />}
           label="Total Users"
           value={stats.users.totalUsers}
           subLabel={`${stats.users.activeUsers} active`}
         />
         <StatCard
-          icon={<BookOpen className="h-6 w-6" style={{ color: 'var(--accent-warm)' }} />}
+          to="/admin/books"
+          icon={<BookOpen className="h-6 w-6" style={{ color: '#111827' }} />}
           label="Total Books"
           value={stats.books.totalBooks}
           subLabel={`${stats.books.totalCopies} copies`}
         />
         <StatCard
-          icon={<Calendar className="h-6 w-6" style={{ color: 'var(--accent-warm)' }} />}
+          to="/admin/loans"
+          icon={<Calendar className="h-6 w-6" style={{ color: '#111827' }} />}
           label="Active Loans"
           value={stats.circulation.activeLoans}
           subLabel={`${stats.circulation.totalCheckouts} total`}
         />
         <StatCard
-          icon={<DollarSign className="h-6 w-6" style={{ color: 'var(--accent-warm)' }} />}
+          to="/admin/fines"
+          icon={<DollarSign className="h-6 w-6" style={{ color: '#111827' }} />}
           label="Fines Collected"
-          value={`$${stats.financial.totalFinesCollected.toFixed(2)}`}
-          subLabel={`$${stats.financial.totalFinesPending.toFixed(2)} pending`}
+          value={format(stats.financial.totalFinesCollected)}
+          subLabel={`${format(stats.financial.totalFinesPending)} pending`}
         />
       </div>
 
@@ -173,22 +180,41 @@ function StatCard({
   label,
   value,
   subLabel,
+  to,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | number;
   subLabel: string;
+  to?: string;
 }) {
-  return (
-    <div className="p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
-      <div className="flex items-center gap-4">
-        <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--parchment-dark)' }}>{icon}</div>
-        <div>
-          <p className="text-sm" style={{ color: 'var(--ink-secondary)' }}>{label}</p>
-          <p className="text-2xl font-bold" style={{ color: 'var(--ink-primary)' }}>{value}</p>
-          <p className="text-xs" style={{ color: 'var(--ink-secondary)' }}>{subLabel}</p>
-        </div>
+  const cardBody = (
+    <div className="flex items-center gap-4">
+      <div className="p-3 rounded-full" style={{ backgroundColor: 'transparent' }}>{icon}</div>
+      <div>
+        <p className="text-sm" style={{ color: 'var(--ink-secondary)' }}>{label}</p>
+        <p className="text-2xl font-bold" style={{ color: 'var(--ink-primary)' }}>{value}</p>
+        <p className="text-xs" style={{ color: 'var(--ink-secondary)' }}>{subLabel}</p>
       </div>
+    </div>
+  );
+
+  const cardStyle = {
+    backgroundColor: 'var(--parchment-light)',
+    border: '1px solid var(--parchment-border)',
+  };
+
+  if (to) {
+    return (
+      <Link to={to} className="block p-6 rounded-lg shadow-md" style={cardStyle}>
+        {cardBody}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="p-6 rounded-lg shadow-md" style={cardStyle}>
+      {cardBody}
     </div>
   );
 }

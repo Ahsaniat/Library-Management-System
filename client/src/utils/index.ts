@@ -35,6 +35,23 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   );
 }
 
+export const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: '$',
+  BDT: '৳',
+  EUR: '€',
+  GBP: '£',
+  INR: '₹',
+};
+
+/** Formats a monetary value in the configured currency (dollar and taka supported). */
+export function formatCurrency(amount: number | string | undefined, currency = 'USD'): string {
+  const value = Number(amount ?? 0);
+  const code = currency.toUpperCase();
+  const symbol = CURRENCY_SYMBOLS[code];
+  const formatted = value.toFixed(2);
+  return symbol ? `${symbol}${formatted}` : `${code} ${formatted}`;
+}
+
 export function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',

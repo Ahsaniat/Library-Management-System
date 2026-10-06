@@ -31,7 +31,7 @@ export default function MyLoans() {
       {message && <Alert variant={message.type} message={message.text} />}
 
       {loans.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-lg shadow">
+        <div className="text-center py-20 rounded-lg shadow" style={{ backgroundColor: 'var(--parchment-light)' }}>
           <p className="text-gray-600 text-lg mb-4">You have no loans.</p>
           <Link to="/books">
             <Button>Browse Books</Button>
@@ -39,7 +39,7 @@ export default function MyLoans() {
         </div>
       ) : (
         <>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="rounded-lg shadow overflow-hidden" style={{ backgroundColor: 'var(--parchment-light)' }}>
             <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -60,7 +60,7 @@ export default function MyLoans() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y" style={{ borderColor: 'var(--parchment-border)' }}>
               {loans?.map((loan) => {
                 const overdue = loan.status === 'active' && isOverdue(loan.dueDate);
                 const daysLeft = getDaysUntilDue(loan.dueDate);

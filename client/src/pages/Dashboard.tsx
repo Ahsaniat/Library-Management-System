@@ -27,46 +27,46 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
+        <Link to="/my-loans" className="block p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--parchment-dark)' }}>
-              <BookOpen className="h-6 w-6" style={{ color: 'var(--accent-warm)' }} />
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'transparent' }}>
+              <BookOpen className="h-6 w-6" style={{ color: '#111827' }} />
             </div>
             <div>
               <p className="text-sm" style={{ color: 'var(--ink-secondary)' }}>Active Loans</p>
               <p className="text-2xl font-bold" style={{ color: 'var(--ink-primary)' }}>{activeLoans.length}</p>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
+        <Link to="/my-reservations" className="block p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--parchment-dark)' }}>
-              <Clock className="h-6 w-6" style={{ color: 'var(--accent-warm)' }} />
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'transparent' }}>
+              <Clock className="h-6 w-6" style={{ color: '#111827' }} />
             </div>
             <div>
               <p className="text-sm" style={{ color: 'var(--ink-secondary)' }}>Pending Reservations</p>
               <p className="text-2xl font-bold" style={{ color: 'var(--ink-primary)' }}>{pendingReservations.length}</p>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
+        <Link to="/my-loans" className="block p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--parchment-dark)' }}>
-              <BookOpen className="h-6 w-6" style={{ color: 'var(--accent-warm)' }} />
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'transparent' }}>
+              <BookOpen className="h-6 w-6" style={{ color: '#111827' }} />
             </div>
             <div>
               <p className="text-sm" style={{ color: 'var(--ink-secondary)' }}>Overdue</p>
               <p className="text-2xl font-bold" style={{ color: 'var(--ink-primary)' }}>{overdueLoans.length}</p>
             </div>
           </div>
-        </div>
+        </Link>
 
         <div className="p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--parchment-light)', border: '1px solid var(--parchment-border)' }}>
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--parchment-dark)' }}>
-              <Calendar className="h-6 w-6" style={{ color: 'var(--accent-warm)' }} />
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'transparent' }}>
+              <Calendar className="h-6 w-6" style={{ color: '#111827' }} />
             </div>
             <div>
               <p className="text-sm" style={{ color: 'var(--ink-secondary)' }}>Member Since</p>

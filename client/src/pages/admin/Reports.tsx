@@ -4,6 +4,7 @@ import { FileText, Download, Calendar, TrendingUp, Users, BookOpen, DollarSign }
 import api from '../../services/api';
 import { Button, LoadingSpinner, Alert } from '../../components';
 import { getApiErrorMessage } from '../../utils';
+import { useCurrency } from '../../hooks/useSettings';
 
 type ReportType = 'circulation' | 'inventory' | 'overdue' | 'financial' | 'users';
 
@@ -148,6 +149,7 @@ function StatList({ title, items }: { title: string; items: Array<[string, strin
 }
 
 function OverdueReportView() {
+  const { format } = useCurrency();
   const { data, isLoading, error } = useReport<OverdueReport>('/reports/overdue', 'overdue');
 
   if (isLoading) return <LoadingSpinner className="py-12" />;
@@ -159,7 +161,7 @@ function OverdueReportView() {
         <div>
           <h2 className="text-xl font-semibold" style={{ color: 'var(--ink-primary)' }}>Overdue Books Report</h2>
           <p className="text-sm mt-1" style={{ color: 'var(--ink-secondary)' }}>
-            {data.totalOverdue} overdue items • ${data.totalEstimatedFines.toFixed(2)} estimated fines
+            {data.totalOverdue} overdue items • {format(data.totalEstimatedFines)} estimated fines
           </p>
         </div>
         <Button
@@ -176,7 +178,7 @@ function OverdueReportView() {
                 item.barcode,
                 item.dueDate,
                 item.daysOverdue,
-                item.estimatedFine.toFixed(2),
+                Number(item.estimatedFine).toFixed(2),
               ])
             )
           }
@@ -222,7 +224,7 @@ function OverdueReportView() {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--ink-primary)' }}>
-                  ${item.estimatedFine.toFixed(2)}
+                  {format(item.estimatedFine)}
                 </td>
               </tr>
             ))}
@@ -254,6 +256,7 @@ function CirculationReportView() {
 }
 
 function FinancialReportView() {
+  const { format } = useCurrency();
   const { data, isLoading, error } = useReport<FinancialStats>('/reports/financial', 'financial');
 
   if (isLoading) return <LoadingSpinner className="py-12" />;
@@ -263,10 +266,10 @@ function FinancialReportView() {
     <StatList
       title="Financial"
       items={[
-        ['Fines generated', `$${data.totalFinesGenerated.toFixed(2)}`],
-        ['Fines collected', `$${data.totalFinesCollected.toFixed(2)}`],
-        ['Fines pending', `$${data.totalFinesPending.toFixed(2)}`],
-        ['Fines waived', `$${data.totalFinesWaived.toFixed(2)}`],
+        ['Fines generated', format(data.totalFinesGenerated)],
+        ['Fines collected', format(data.totalFinesCollected)],
+        ['Fines pending', format(data.totalFinesPending)],
+        ['Fines waived', format(data.totalFinesWaived)],
       ]}
     />
   );

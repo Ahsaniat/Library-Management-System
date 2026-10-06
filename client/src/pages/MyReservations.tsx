@@ -34,7 +34,7 @@ export default function MyReservations() {
       {message && <Alert variant={message.type} message={message.text} />}
 
       {reservations.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-lg shadow">
+        <div className="text-center py-20 rounded-lg shadow" style={{ backgroundColor: 'var(--parchment-light)' }}>
           <p className="text-gray-600 text-lg mb-4">You have no reservations.</p>
           <Link to="/books">
             <Button>Browse Books</Button>
@@ -42,7 +42,7 @@ export default function MyReservations() {
         </div>
       ) : (
         <>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="rounded-lg shadow overflow-hidden" style={{ backgroundColor: 'var(--parchment-light)' }}>
             <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -63,7 +63,7 @@ export default function MyReservations() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y" style={{ borderColor: 'var(--parchment-border)' }}>
               {reservations?.map((reservation) => {
                 const canCancel =
                   reservation.status === 'pending' || reservation.status === 'ready';

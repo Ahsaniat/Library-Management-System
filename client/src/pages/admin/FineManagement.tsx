@@ -5,6 +5,7 @@ import { useAllFines, usePayFine, useWaiveFine } from '../../hooks/useFines';
 import { Fine, UserRole } from '../../types';
 import { formatDate, getApiErrorMessage } from '../../utils';
 import { useAuthStore } from '../../store';
+import { useCurrency } from '../../hooks/useSettings';
 
 type ActionState = { id: string; type: 'pay' | 'waive' } | null;
 
@@ -21,6 +22,7 @@ export default function FineManagement() {
   const fines = data?.fines ?? [];
   const payFine = usePayFine();
   const waiveFine = useWaiveFine();
+  const { format } = useCurrency();
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === UserRole.ADMIN;
 
@@ -152,10 +154,10 @@ export default function FineManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm" style={{ color: 'var(--ink-primary)' }}>
-                    ${Number(fine.amount).toFixed(2)}
+                    {format(fine.amount)}
                   </td>
                   <td className="px-6 py-4 text-sm" style={{ color: 'var(--ink-primary)' }}>
-                    ${outstanding(fine).toFixed(2)}
+                    {format(outstanding(fine))}
                   </td>
                   <td className="px-6 py-4">
                     <span

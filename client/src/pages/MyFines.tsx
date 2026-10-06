@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AlertCircle, Receipt } from 'lucide-react';
 import { LoadingSpinner, Pagination } from '../components';
 import { useMyFines, useMyFineSummary } from '../hooks/useFines';
+import { useCurrency } from '../hooks/useSettings';
 import { formatDate } from '../utils';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -15,6 +16,7 @@ export default function MyFines() {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useMyFines(page);
   const { data: outstanding } = useMyFineSummary();
+  const { format } = useCurrency();
   const fines = data?.fines ?? [];
 
   if (isLoading) {
@@ -33,7 +35,7 @@ export default function MyFines() {
         >
           <span style={{ color: 'var(--ink-secondary)' }}>Outstanding: </span>
           <span className="font-semibold" style={{ color: 'var(--ink-primary)' }}>
-            ${(outstanding ?? 0).toFixed(2)}
+            {format(outstanding)}
           </span>
         </div>
       </div>
@@ -75,10 +77,10 @@ export default function MyFines() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm" style={{ color: 'var(--ink-primary)' }}>
-                      ${Number(fine.amount).toFixed(2)}
+                      {format(fine.amount)}
                     </td>
                     <td className="px-6 py-4 text-sm" style={{ color: 'var(--ink-secondary)' }}>
-                      ${Number(fine.paidAmount).toFixed(2)}
+                      {format(fine.paidAmount)}
                     </td>
                     <td className="px-6 py-4">
                       <span
