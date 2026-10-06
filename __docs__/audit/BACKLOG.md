@@ -98,3 +98,36 @@ against PostgreSQL, client build/typecheck).
 - [x] Live API suite: 15/15 against PostgreSQL (auth, catalog, circulation,
       fines, reports)
 - [x] Migrations applied and re-runnable
+
+## Runtime walkthrough (browser)
+
+Scenario walkthrough (member borrow, librarian barcode checkout/return with
+condition, fine partial payment/payment/waiver, reports, settings, users,
+books) surfaced and fixed five additional defects:
+
+- Guests were redirected to `/login` from every book page (wishlist check
+  returned 401). Fixed with optional-auth endpoint, gated hook and a guest-
+  safe 401 interceptor.
+- Librarians received 403 on the borrower typeahead; user reads are now
+  librarian-visible while mutations stay admin-only.
+- The checkout modal posted scanner values as UUIDs; it now routes through
+  the barcode-aware service.
+- Modal scrims used Tailwind v3 `bg-opacity-50` (removed in v4), rendering an
+  opaque black void; replaced with `bg-black/60` plus dialog semantics.
+- The footer rendered on every route; it is now landing-page only. Overdue
+  loans show borrower names instead of UUIDs, and Waive is admin-only in the
+  UI.
+
+## Deferred items — rationale
+
+| Item | Why it is deferred | Risk if not addressed |
+|---|---|---|
+| F-037 Admin pages call the API directly | Pure internal refactor with no user-visible or security impact; moving ~150 lines onto hooks risks churn late in the cycle. Dead hooks were removed so there is one clear pattern left to migrate to. | Low: duplicated query keys and harder testability |
+| F-039 Full a11y audit | Requires running axe/Lighthouse across every page and fixing systemic focus-trap behaviour in modals; key gaps found in the audit (icon-only buttons, hover-only menus, dialog roles) were fixed. | Medium: WCAG compliance cannot be claimed without the full pass |
+| F-041 Rewriting git history to purge the old agent log | Rewriting shared history invalidates every commit hash and forces a force-push that can break clones; the log was removed from the tree, untracked and `.gitignore` repaired. | Low: the historical file remains readable in old commits |
+| F-042 Rotating `server/.env` credentials | Secrets live on the operator's machine, not in the repository; only the owner can rotate them at the providers (DB, Gmail app password, JWT). The Docker context now excludes `.env`. | High if the file leaks — rotate before sharing the directory |
+| F-058 Remaining inline colors on older pages | Cosmetic; token set and new components use it, but migrating every legacy inline style is a design pass best done alongside a visual review. | Low |
+| F-061 Wishlist priority/notes UI | API and validation exist; exposing them needs UX decisions (drag-to-rank vs numeric). Not required for circulation correctness. | Low |
+| F-063 UUIDv7 primary keys | Changing primary-key generation is a schema/data migration with no functional gain at current scale; barcodes already use crypto randomness. | Low until very high write volume |
+| Token in local `git` remote URL | Stored by the operator for pushing during this session; must be revoked and the remote URL cleaned manually. | High — revoke it |
+

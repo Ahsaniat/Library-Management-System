@@ -20,6 +20,23 @@ A full-scale, self-hostable library management system built with modern technolo
 - Docker support for easy deployment
 - Rate limiting and security headers
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Landing page](__docs__/screenshots/01-home.png) | ![Catalog with filters](__docs__/screenshots/03-catalog-filters.png) |
+| **Landing page** | **Catalog with category, language and sort filters** |
+| ![Book detail](__docs__/screenshots/04-book-detail.png) | ![Member dashboard](__docs__/screenshots/05-dashboard.png) |
+| **Book detail with reviews and availability** | **Member dashboard** |
+| ![Checkout by barcode](__docs__/screenshots/08-checkout-modal.png) | ![Return with condition](__docs__/screenshots/09-return-modal.png) |
+| **Desk checkout: scan a barcode, search the borrower** | **Return: capture the item condition** |
+| ![Loan management](__docs__/screenshots/10-loan-management.png) | ![Fine management](__docs__/screenshots/15-fine-waived.png) |
+| **Overdue loans with borrower and fine context** | **Fine payment and waiver management** |
+| ![Financial report](__docs__/screenshots/16-reports.png) | ![System settings](__docs__/screenshots/17-settings.png) |
+| **Reports with CSV export** | **Policy settings (loan period, fine rate, holds)** |
+| ![User management](__docs__/screenshots/18-users.png) | ![Book management](__docs__/screenshots/19-books.png) |
+| **User management** | **Book management with Open Library import** |
+
 ## Quick Start
 
 ### Prerequisites
