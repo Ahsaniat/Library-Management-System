@@ -55,6 +55,7 @@ const DEFAULTS = [
 ];
 
 module.exports = {
+  DEFAULTS,
   up: async () => {
     const Setting = loadSetting();
     for (const setting of DEFAULTS) {

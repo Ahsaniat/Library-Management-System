@@ -18,12 +18,21 @@ async function seed() {
 
   // Models must be registered on the sequelize instance before sync() runs,
   // otherwise sync creates nothing on a fresh database.
-  const { User, Author, Publisher, Category, Library, Book, BookCopy } = await import(
-    '../src/models'
-  );
+  const { User, Author, Publisher, Category, Library, Book, BookCopy, Setting } =
+    await import('../src/models');
 
   await sequelize.sync({ force: true });
   console.log('Database synced');
+
+  // sync({force:true}) wipes the settings the migration seeder inserted, so
+  // policy defaults are re-applied here to keep a freshly seeded environment
+  // fully functional.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { DEFAULTS: SETTINGS_DEFAULTS } = require('../../database/seeds/20260101000001-settings.cjs');
+  for (const setting of SETTINGS_DEFAULTS) {
+    await Setting.findOrCreate({ where: { key: setting.key }, defaults: setting });
+  }
+  console.log('Settings seeded');
 
   const library = await Library.create({
     name: 'Main Library',

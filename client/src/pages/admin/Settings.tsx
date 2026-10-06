@@ -31,6 +31,19 @@ export default function Settings() {
     );
   }
 
+  if (settings.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--ink-primary)' }}>
+          System Settings
+        </h1>
+        <p style={{ color: 'var(--ink-secondary)' }}>
+          No settings found. Run <code>npm run db:seed</code> to install the policy defaults.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
